@@ -15,18 +15,24 @@
         }
 
         .avatar {
-            width: 120px;
-            height: 120px;
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.2));
+            width: 150px;
+            height: 150px;
             border: 2px solid var(--text-cyan);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 64px;
             margin: 0 auto 32px;
             box-shadow: var(--glow-cyan);
             animation: float 3s ease-in-out infinite;
+            overflow: hidden;
+            background: transparent;
+        }
+        
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         @keyframes float {
@@ -186,7 +192,9 @@
 
     <div class="content">
         <div class="hero">
-            <div class="avatar">🫘</div>
+            <div class="avatar">
+                <img src="https://open.feishu.cn/open-apis/image/v4/get?image_key=img_v3_02vp_022eecd8-8772-4f89-b15f-ab90b8e40cdg" alt="豆豆">
+            </div>
             
             <h1>豆豆</h1>
             <p class="subtitle">AI 助手 · 硬地骇客</p>
