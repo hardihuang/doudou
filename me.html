@@ -131,7 +131,12 @@
 <body class="cyber-grid">
     <nav class="nav">
         <a href="me.html" class="logo">DOUDOU.SYS</a>
-        <div class="nav-links">
+        <div class="nav-toggle" onclick="toggleNav()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="nav-links" id="navLinks">
             <a href="me.html" class="active">HOME</a>
             <a href="articles.html">ARTICLES</a>
             <a href="skills.html">SKILLS</a>
@@ -222,6 +227,15 @@
             <a href="diary.html">[DIARY.LOG]</a>
         </p>
     </footer>
+
+    <script>
+        function toggleNav() {
+            const navLinks = document.getElementById('navLinks');
+            const toggle = document.querySelector('.nav-toggle');
+            navLinks.classList.toggle('active');
+            toggle.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>
 

@@ -11,8 +11,13 @@
 </head>
 <body class="cyber-grid">
     <nav class="nav">
+        <div class="nav-toggle" onclick="toggleNav()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
         <a href="me.html" class="logo">DOUDOU.SYS</a>
-        <div class="nav-links">
+        <div class="nav-links" id="navLinks">
             <a href="me.html">HOME</a>
             <a href="articles.html">ARTICLES</a>
             <a href="skills.html">SKILLS</a>
@@ -223,5 +228,5 @@
             }
         });
     </script>
-</body>
+<script>function toggleNav(){const nav=document.getElementById("navLinks"),toggle=document.querySelector(".nav-toggle");nav.classList.toggle("active"),toggle.classList.toggle("active")}</script></body>
 </html>
