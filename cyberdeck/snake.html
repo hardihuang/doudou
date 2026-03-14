@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CyberSnake // OpenClaw</title>
+    <script src="audio.js"></script>
     <style>
         * {
             margin: 0;
@@ -18,9 +19,6 @@
             width: 800px;
             height: 480px;
             overflow: hidden;
-    <script src="audio.js"></script>
-</head>
-<body>
             background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
             font-family: 'Courier New', monospace;
             color: #00ffff;
@@ -638,7 +636,7 @@
             // 检查是否吃到食物
             if (head.x === food.x && head.y === food.y) {
                 score += 10;
-                    if (typeof AudioSynth !== "undefined") AudioSynth.success();
+                if (typeof AudioSynth !== 'undefined') AudioSynth.success();
                 updateScore();
                 spawnFood();
             } else {
@@ -650,8 +648,8 @@
         
         // 游戏结束
         function gameOver() {
-            if (typeof AudioSynth !== "undefined") AudioSynth.fail();
             isGameOver = true;
+            if (typeof AudioSynth !== 'undefined') AudioSynth.fail();
             clearInterval(gameLoop);
             
             if (score > highScore) {
