@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CyberGarden // Idea Bank</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        html, body {
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 800px;
+            height: 480px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 800px;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            padding: 6px;
+        }
+        
+        .header {
+            height: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 0 10px;
+            margin-bottom: 6px;
+        }
+        
+        .header h1 {
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+        }
+        
+        .header .neon-green {
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
+        }
+        
+        .main-area {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+        }
+        
+        .garden-panel {
+            width: 480px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .garden-title {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            font-size: 10px;
+            color: #00ff00;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            z-index: 10;
+        }
+        
+        #gardenCanvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .control-panel {
+            width: 296px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .panel {
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        .panel-title {
+            font-size: 10px;
+            color: #00ff00;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .voice-btn {
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 255, 255, 0.2));
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            color: #00ff00;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.3s;
+        }
+        
+        .voice-btn:hover, .voice-btn:active {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        
+        .idea-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 4px;
+            padding: 6px;
+            color: #00ff00;
+            font-size: 11px;
+            font-family: inherit;
+            resize: none;
+            height: 40px;
+            margin-bottom: 6px;
+        }
+        
+        .seed-btn {
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.15), rgba(0, 255, 255, 0.15));
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+            color: #00ff00;
+            font-size: 11px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .seed-btn:hover, .seed-btn:active {
+            background: rgba(0, 255, 0, 0.25);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        
+        .stat-item {
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        
+        .stat-label {
+            font-size: 9px;
+            color: #888;
+            margin-top: 2px;
+        }
+        
+        .ideas-list {
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .ideas-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .idea-item {
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            border-radius: 4px;
+            padding: 6px;
+            margin-bottom: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .idea-item:hover {
+            background: rgba(0, 255, 0, 0.1);
+            border-color: #00ff00;
+        }
+        
+        .idea-item.incubating {
+            border-color: #ffaa00;
+            background: rgba(255, 170, 0, 0.1);
+        }
+        
+        .idea-item.completed {
+            border-color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .idea-seed {
+            font-size: 14px;
+        }
+        
+        .idea-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .idea-stage {
+            font-size: 8px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+        }
+        
+        .footer {
+            height: 20px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .scrolling-text {
+            white-space: nowrap;
+            animation: scroll 12s linear infinite;
+            font-size: 10px;
+        }
+        
+        @keyframes scroll {
+            0% { transform: translateX(800px); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .seed-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 20, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .seed-modal.show {
+            display: flex;
+        }
+        
+        .seed-modal-content {
+            background: rgba(10, 20, 10, 0.98);
+            border: 2px solid #00ff00;
+            border-radius: 12px;
+            padding: 20px;
+            width: 400px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        
+        .seed-modal-title {
+            font-size: 16px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .seed-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 6px;
+            background: rgba(0, 255, 0, 0.05);
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .seed-info-label {
+            color: #888;
+        }
+        
+        .seed-info-value {
+            color: #00ff00;
+        }
+        
+        .seed-idea-text {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #00ff00;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+        
+        .seed-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .seed-btn-action {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .seed-btn-incubate {
+            background: linear-gradient(135deg, rgba(255, 170, 0, 0.2), rgba(255, 100, 0, 0.2));
+            border-color: #ffaa00;
+            color: #ffaa00;
+        }
+        
+        .seed-btn-incubate:hover {
+            background: rgba(255, 170, 0, 0.3);
+        }
+        
+        .seed-btn-preview {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 200, 255, 0.2));
+            border-color: #00ffff;
+            color: #00ffff;
+        }
+        
+        .seed-btn-close {
+            background: rgba(100, 100, 100, 0.2);
+            border-color: #666;
+            color: #888;
+        }
+        
+        .incubating-toast {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 170, 0, 0.95);
+            border: 2px solid #ffaa00;
+            border-radius: 12px;
+            padding: 20px 30px;
+            text-align: center;
+            display: none;
+            z-index: 200;
+        }
+        
+        .incubating-toast.show {
+            display: block;
+        }
+        
+        .incubating-icon {
+            font-size: 40px;
+            animation: rotate 2s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .completion-toast {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 255, 255, 0.95);
+            border: 2px solid #00ffff;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: none;
+            z-index: 200;
+            cursor: pointer;
+        }
+        
+        .completion-toast.show {
+            display: block;
+        }
+        
+        .home-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            color: #00ffff;
+            padding: 4px 10px;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .home-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button class="home-btn" onclick="goHome()">◀ 首页</button>
+                <h1>CYBER<span class="neon-green">GARDEN</span> // v2.0</h1>
+            </div>
+            <div style="font-size: 12px; color: #00ff00;">● 想法孵化器</div>
+        </header>
+        
+        <div class="main-area">
+            <div class="garden-panel">
+                <div class="garden-title">🌱 你的想法花园</div>
+                <canvas id="gardenCanvas"></canvas>
+                
+                <div class="seed-modal" id="seedModal">
+                    <div class="seed-modal-content">
+                        <div class="seed-modal-title">🌱 种子详情</div>
+                        <div id="modalContent"></div>
+                        <div class="seed-actions">
+                            <button class="seed-btn-action seed-btn-incubate" id="incubateBtn" onclick="incubateSeed()">🔬 孵化这个想法</button>
+                            <button class="seed-btn-action seed-btn-preview" id="previewBtn" onclick="previewDocument()" style="display: none;">📄 查看文档</button>
+                            <button class="seed-btn-action seed-btn-close" onclick="closeModal()">关闭</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="incubating-toast" id="incubatingToast">
+                    <div class="incubating-icon">⚗️</div>
+                    <div style="font-size: 16px; color: #000; font-weight: bold; margin-bottom: 8px;">正在孵化中...</div>
+                    <div style="font-size: 12px; color: #333;">OpenClaw AI 正在分析你的想法<br>请稍候...</div>
+                </div>
+                
+                <div class="completion-toast" id="completionToast" onclick="openPreview()">
+                    <div style="font-size: 12px; color: #000; font-weight: bold;">✓ 孵化完成！</div>
+                    <div style="font-size: 10px; color: #333;">点击查看详细方案</div>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <div class="panel">
+                    <div class="panel-title">🎤 语音输入</div>
+                    <button class="voice-btn" onclick="alert('请直接输入文字')">
+                        <span style="font-size: 20px;">🎙️</span>
+                        <span>按住说话</span>
+                    </button>
+                    <textarea class="idea-input" id="ideaInput" placeholder="或在此输入你的想法..."></textarea>
+                    <button class="seed-btn" onclick="plantSeed()">🌱 种植种子</button>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-title">📊 花园统计</div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="seedCount">0</div>
+                            <div class="stat-label">种子</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="sproutCount">0</div>
+                            <div class="stat-label">发芽</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="treeCount">0</div>
+                            <div class="stat-label">大树</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-title">🌿 最近种子</div>
+                    <div class="ideas-list" id="ideasList">
+                        <div style="text-align: center; color: #666; font-size: 10px; padding: 10px;">还没有种子，种植你的第一个想法吧！</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="scrolling-text">
+                <span style="color: #00ff00;">种植想法</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #ffaa00;">AI 孵化</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #00ffff;">生成方案</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let seeds = [];
+        let selectedSeed = null;
+        
+        function init() {
+            loadSeeds();
+            updateStats();
+            renderIdeasList();
+            drawGarden();
+            setInterval(growSeeds, 60000);
+        }
+        
+        function loadSeeds() {
+            const saved = localStorage.getItem('cyberGardenSeeds');
+            if (saved) seeds = JSON.parse(saved);
+        }
+        
+        function saveSeeds() {
+            localStorage.setItem('cyberGardenSeeds', JSON.stringify(seeds));
+        }
+        
+        function drawGarden() {
+            const canvas = document.getElementById('gardenCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 480;
+            canvas.height = 380;
+            
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
+            for (let i = 0; i < canvas.width; i += 30) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            
+            seeds.forEach((seed, index) => {
+                const x = 60 + (index % 6) * 70;
+                const y = 80 + Math.floor(index / 6) * 90;
+                const stage = seed.stage || 0;
+                
+                ctx.fillStyle = 'rgba(139, 69, 19, 0.3)';
+                ctx.beginPath();
+                ctx.arc(x, y + 25, 15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (stage === 0) {
+                    ctx.fillStyle = '#8B4513';
+                    ctx.beginPath();
+                    ctx.ellipse(x, y + 25, 4, 6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (stage === 1) {
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y + 25);
+                    ctx.lineTo(x, y + 10);
+                    ctx.stroke();
+                } else if (stage === 2) {
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y + 25);
+                    ctx.lineTo(x, y - 10);
+                    ctx.stroke();
+                } else {
+                    ctx.strokeStyle = '#8B4513';
+                    ctx.lineWidth = 6;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y + 25);
+                    ctx.lineTo(x, y - 30);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#00ff00';
+                    ctx.beginPath();
+                    ctx.arc(x, y - 35, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(x - 30, y + 35, 60, 16);
+                ctx.fillStyle = '#00ff00';
+                ctx.font = '8px Courier New';
+                ctx.textAlign = 'center';
+                const shortText = seed.text.length > 6 ? seed.text.substring(0, 6) + '...' : seed.text;
+                ctx.fillText(shortText, x, y + 46);
+            });
+        }
+        
+        document.getElementById('gardenCanvas').addEventListener('click', (e) => {
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            seeds.forEach((seed, index) => {
+                const sx = 60 + (index % 6) * 70;
+                const sy = 80 + Math.floor(index / 6) * 90;
+                const dist = Math.sqrt((x - sx) ** 2 + (y - sy) ** 2);
+                
+                if (dist < 30) {
+                    openSeedModal(seed);
+                }
+            });
+        });
+        
+        function openSeedModal(seed) {
+            selectedSeed = seed;
+            const days = Math.floor((Date.now() - new Date(seed.plantedAt).getTime()) / (1000 * 60 * 60 * 24));
+            const stageNames = ['种子', '发芽', '幼苗', '大树'];
+            
+            let status = '未孵化';
+            if (seed.incubationStatus === 'incubating') status = '孵化中...';
+            if (seed.incubationStatus === 'completed') status = '✓ 已完成';
+            
+            document.getElementById('modalContent').innerHTML = `
+                <div class="seed-info-row"><span class="seed-info-label">种植时间：</span><span class="seed-info-value">${new Date(seed.plantedAt).toLocaleString('zh-CN')}</span></div>
+                <div class="seed-info-row"><span class="seed-info-label">生长天数：</span><span class="seed-info-value">${days} 天</span></div>
+                <div class="seed-info-row"><span class="seed-info-label">当前阶段：</span><span class="seed-info-value">${stageNames[seed.stage] || '种子'}</span></div>
+                <div class="seed-info-row"><span class="seed-info-label">孵化状态：</span><span class="seed-info-value">${status}</span></div>
+                <div class="seed-idea-text">${seed.text}</div>
+            `;
+            
+            const incubateBtn = document.getElementById('incubateBtn');
+            const previewBtn = document.getElementById('previewBtn');
+            
+            if (seed.incubationStatus === 'completed') {
+                incubateBtn.style.display = 'none';
+                previewBtn.style.display = 'block';
+            } else if (seed.incubationStatus === 'incubating') {
+                incubateBtn.style.display = 'block';
+                incubateBtn.disabled = true;
+                incubateBtn.textContent = '🔬 孵化中...';
+                previewBtn.style.display = 'none';
+            } else {
+                incubateBtn.style.display = 'block';
+                incubateBtn.disabled = false;
+                incubateBtn.textContent = '🔬 孵化这个想法';
+                previewBtn.style.display = 'none';
+            }
+            
+            document.getElementById('seedModal').classList.add('show');
+        }
+        
+        function closeModal() {
+            document.getElementById('seedModal').classList.remove('show');
+            selectedSeed = null;
+        }
+        
+        async function incubateSeed() {
+            if (!selectedSeed) return;
+            
+            selectedSeed.incubationStatus = 'incubating';
+            selectedSeed.incubationStartTime = new Date().toISOString();
+            saveSeeds();
+            
+            closeModal();
+            document.getElementById('incubatingToast').classList.add('show');
+            renderIdeasList();
+            drawGarden();
+            
+            // AI 孵化（2秒）
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const report = generateReport(selectedSeed);
+            localStorage.setItem('previewDoc_' + selectedSeed.id, JSON.stringify(report));
+            
+            selectedSeed.incubationStatus = 'completed';
+            selectedSeed.incubationCompleteTime = new Date().toISOString();
+            selectedSeed.report = report;
+            saveSeeds();
+            
+            document.getElementById('incubatingToast').classList.remove('show');
+            document.getElementById('completionToast').classList.add('show');
+            
+            renderIdeasList();
+            drawGarden();
+        }
+        
+        function generateReport(seed) {
+            const now = new Date();
+            const planted = new Date(seed.plantedAt);
+            const days = Math.floor((now - planted) / (1000 * 60 * 60 * 24));
+            
+            // 分析想法类型
+            const ideaLower = seed.text.toLowerCase();
+            let ideaType = '通用项目';
+            let techStack = 'Vue.js + Node.js + MongoDB';
+            
+            if (ideaLower.includes('游戏')) { ideaType = '游戏项目'; techStack = 'Unity + C#'; }
+            else if (ideaLower.includes('app') || ideaLower.includes('应用')) { ideaType = '移动应用'; techStack = 'React Native + Node.js'; }
+            else if (ideaLower.includes('ai') || ideaLower.includes('智能')) { ideaType = 'AI 项目'; techStack = 'Python + TensorFlow'; }
+            else if (ideaLower.includes('教育') || ideaLower.includes('学习')) { ideaType = '教育科技'; techStack = 'Vue.js + Python'; }
+            
+            return {
+                title: '想法孵化报告：' + seed.text.substring(0, 20),
+                metadata: { ideaText: seed.text, plantedAt: seed.plantedAt, daysGrowing: days, ideaType: ideaType },
+                sections: [
+                    { title: '🌱 原始种子', content: `种植时间：${planted.toLocaleString('zh-CN')}\n生长天数：${days} 天\n完整想法：${seed.text}\n项目类型：${ideaType}` },
+                    { title: '🔍 市场调研', content: `${ideaType}领域正在快速发展。发现3-5个类似产品，存在差异化空间。` },
+                    { title: '💡 方案设计', content: `技术架构：${techStack}\n\n实现步骤：\nWeek 1: 需求分析\nWeek 2: 核心开发\nWeek 3: 测试优化\nWeek 4: 上线部署` },
+                    { title: '🤖 OpenClaw 自动化', content: '可实现：数据收集、文档生成、定时任务\n需人工：创意决策、审核确认、体验优化\n\n建议分工：@advisor @creator @evolver' },
+                    { title: '📋 行动计划', content: '立即执行：完善需求、组建团队\n本周完成：原型设计、技术选型\n本月目标：MVP版本、用户反馈' }
+                ]
+            };
+        }
+        
+        function previewDocument() {
+            if (selectedSeed && selectedSeed.incubationStatus === 'completed') {
+                window.open('preview.html?id=' + selectedSeed.id, '_blank');
+            }
+        }
+        
+        function openPreview() {
+            const completedSeed = seeds.find(s => s.incubationStatus === 'completed');
+            if (completedSeed) {
+                window.open('preview.html?id=' + completedSeed.id, '_blank');
+            }
+            document.getElementById('completionToast').classList.remove('show');
+        }
+        
+        function plantSeed() {
+            const text = document.getElementById('ideaInput').value.trim();
+            if (!text) { alert('请先输入一个想法！'); return; }
+            
+            seeds.push({
+                id: Date.now(),
+                text: text,
+                stage: 0,
+                plantedAt: new Date().toISOString(),
+                incubationStatus: 'none'
+            });
+            
+            saveSeeds();
+            document.getElementById('ideaInput').value = '';
+            updateStats();
+            renderIdeasList();
+            drawGarden();
+        }
+        
+        function updateStats() {
+            document.getElementById('seedCount').textContent = seeds.filter(s => s.stage === 0).length;
+            document.getElementById('sproutCount').textContent = seeds.filter(s => s.stage === 1 || s.stage === 2).length;
+            document.getElementById('treeCount').textContent = seeds.filter(s => s.stage === 3).length;
+        }
+        
+        function renderIdeasList() {
+            const list = document.getElementById('ideasList');
+            if (seeds.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: #666; font-size: 10px; padding: 10px;">还没有种子，种植你的第一个想法吧！</div>';
+                return;
+            }
+            
+            list.innerHTML = seeds.slice(-5).reverse().map(seed => {
+                const stageNames = ['🌰', '🌱', '🌿', '🌳'];
+                let status = 'Stage ' + seed.stage;
+                let itemClass = 'idea-item';
+                
+                if (seed.incubationStatus === 'incubating') { status = '孵化中'; itemClass += ' incubating'; }
+                if (seed.incubationStatus === 'completed') { status = '✓ 已完成'; itemClass += ' completed'; }
+                
+                return `<div class="${itemClass}" onclick="openSeedModal(seeds.find(s => s.id === ${seed.id}))"><span class="idea-seed">${stageNames[seed.stage]}</span><span class="idea-text">${seed.text}</span><span class="idea-stage">${status}</span></div>`;
+            }).join('');
+        }
+        
+        function growSeeds() {
+            let changed = false;
+            seeds.forEach(seed => {
+                const hours = (Date.now() - new Date(seed.plantedAt).getTime()) / (1000 * 60 * 60);
+                if (hours > 1 && seed.stage === 0) { seed.stage = 1; changed = true; }
+                else if (hours > 3 && seed.stage === 1) { seed.stage = 2; changed = true; }
+                else if (hours > 8 && seed.stage === 2) { seed.stage = 3; changed = true; }
+            });
+            
+            if (changed) { saveSeeds(); updateStats(); drawGarden(); }
+        }
+        
+        function goHome() { window.location.href = 'index.html'; }
+        
+        init();
+    </script>
+</body>
+</html>

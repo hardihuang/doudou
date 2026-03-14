@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CyberPomodoro // OpenClaw</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        html, body {
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+        }
+        
+        /* 扫描线效果 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 800px;
+            height: 480px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 800px;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            padding: 6px;
+        }
+        
+        /* 顶部标题栏 */
+        .header {
+            height: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 0 10px;
+            margin-bottom: 6px;
+        }
+        
+        .header h1 {
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+        }
+        
+        .header .neon-pink {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+        }
+        
+        .header .status {
+            font-size: 12px;
+            color: #00ff00;
+        }
+        
+        .header .status.rest {
+            color: #ff00ff;
+        }
+        
+        /* 主内容区 */
+        .main-area {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+        }
+        
+        /* 左侧圆形计时器 */
+        .timer-panel {
+            width: 400px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .timer-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+        
+        #timerCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        /* 时间显示 */
+        .time-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+        
+        .time-main {
+            font-size: 56px;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+            line-height: 1;
+        }
+        
+        .time-main.focus {
+            color: #00ff00;
+        }
+        
+        .time-main.rest {
+            color: #ff00ff;
+        }
+        
+        .time-label {
+            font-size: 14px;
+            margin-top: 8px;
+            opacity: 0.8;
+        }
+        
+        /* 调节提示 */
+        .adjust-hint {
+            position: absolute;
+            bottom: 20px;
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+        }
+        
+        /* 右侧控制面板 */
+        .control-panel {
+            width: 376px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .panel {
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        .panel-title {
+            font-size: 10px;
+            color: #00ffff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        /* 预设按钮 */
+        .preset-buttons {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .preset-btn {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            color: #00ffff;
+            padding: 10px;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .preset-btn:hover, .preset-btn:active {
+            background: rgba(0, 255, 255, 0.25);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .preset-btn.active {
+            background: rgba(0, 255, 255, 0.3);
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+        
+        /* 统计信息 */
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        
+        .stat-item {
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        
+        .stat-label {
+            font-size: 9px;
+            color: #888;
+            margin-top: 4px;
+        }
+        
+        /* 进度条 */
+        .progress-section {
+            margin-top: 8px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            border-radius: 4px;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        /* 控制按钮 */
+        .control-buttons {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .control-btn {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(255, 0, 255, 0.15));
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            color: #00ffff;
+            padding: 12px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover, .control-btn:active {
+            background: rgba(0, 255, 255, 0.25);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+        
+        .control-btn.primary {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 255, 255, 0.2));
+            border-color: #00ff00;
+        }
+        
+        .control-btn.primary:hover {
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+        
+        /* 任务输入 */
+        .task-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 8px;
+            color: #00ffff;
+            font-size: 12px;
+            font-family: inherit;
+        }
+        
+        .task-input:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        .task-input::placeholder {
+            color: #666;
+        }
+        
+        /* 底部滚动条 */
+        .footer {
+            height: 20px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            margin-top: 6px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+        
+        .scrolling-text {
+            white-space: nowrap;
+            animation: scroll 10s linear infinite;
+            font-size: 10px;
+        }
+        
+        @keyframes scroll {
+            0% { transform: translateX(800px); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* 闪烁动画 */
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .flashing {
+            animation: flash 0.5s ease-in-out infinite;
+        }
+        
+        /* 完成提示 */
+        .complete-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 10, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 100;
+        }
+        
+        .complete-overlay.show {
+            display: flex;
+        }
+        
+        .complete-overlay.rest {
+            background: rgba(10, 0, 10, 0.95);
+        }
+        
+        .complete-box {
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid;
+            border-radius: 12px;
+            padding: 30px 40px;
+            text-align: center;
+            max-width: 320px;
+        }
+        
+        .complete-text {
+            font-size: 24px;
+            text-shadow: 0 0 20px currentColor;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .complete-subtext {
+            font-size: 13px;
+            color: #ccc;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .complete-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .complete-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 255, 255, 0.1));
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 12px 30px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+        }
+        
+        .complete-btn:hover, .complete-btn:active {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+        
+        .complete-btn.secondary {
+            background: transparent;
+            border-color: #666;
+            color: #888;
+            font-size: 11px;
+            padding: 8px 20px;
+        }
+        
+        .complete-btn.secondary:hover {
+            border-color: #999;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题栏 -->
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button class="preset-btn" onclick="goHome()" style="padding: 6px 10px; font-size: 10px;">◀ 首页</button>
+                <h1>赛博<span class="neon-pink">番茄钟</span> // v1.0</h1>
+            </div>
+            <div class="status" id="modeStatus">专注模式</div>
+        </header>
+        
+        <!-- 主内容区 -->
+        <div class="main-area">
+            <!-- 左侧圆形计时器 -->
+            <div class="timer-panel">
+                <div class="timer-container">
+                    <canvas id="timerCanvas" width="320" height="320"></canvas>
+                    <div class="time-display">
+                        <div class="time-main focus" id="timeDisplay">25:00</div>
+                        <div class="time-label" id="modeLabel">专注时间</div>
+                    </div>
+                </div>
+                <div class="adjust-hint">拖动圆环调节时间</div>
+                
+                <!-- 完成提示覆盖层 -->
+                <div class="complete-overlay" id="completeOverlay">
+                    <div class="complete-box">
+                        <div class="complete-text" id="completeText">时间到！</div>
+                        <div class="complete-subtext" id="completeSubtext">专注完成！该休息一下了。</div>
+                        <div class="complete-actions">
+                            <button class="complete-btn" id="continueBtn" onclick="continueToNext()">开始休息</button>
+                            <button class="complete-btn secondary" onclick="skipBreak()">跳过休息</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧控制面板 -->
+            <div class="control-panel">
+                <!-- 预设时间 -->
+                <div class="panel">
+                    <div class="panel-title">快速预设</div>
+                    <div class="preset-buttons">
+                        <button class="preset-btn active" onclick="setPreset(25, 5)">25+5</button>
+                        <button class="preset-btn" onclick="setPreset(45, 10)">45+10</button>
+                        <button class="preset-btn" onclick="setPreset(50, 10)">50+10</button>
+                        <button class="preset-btn" onclick="setPreset(15, 3)">15+3</button>
+                    </div>
+                </div>
+                
+                <!-- 当前任务 -->
+                <div class="panel">
+                    <div class="panel-title">当前任务</div>
+                    <input type="text" class="task-input" id="taskInput" placeholder="你在专注做什么？">
+                </div>
+                
+                <!-- 统计 -->
+                <div class="panel">
+                    <div class="panel-title">今日统计</div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="completedCount">0</div>
+                            <div class="stat-label">已完成</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="focusTime">0</div>
+                            <div class="stat-label">专注分钟</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalSessions">0</div>
+                            <div class="stat-label">总次数</div>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div style="font-size: 9px; color: #888;">每日目标：8 个番茄</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="dailyProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 控制按钮 -->
+                <div class="panel">
+                    <div class="panel-title">控制</div>
+                    <div class="control-buttons">
+                        <button class="control-btn primary" id="startBtn" onclick="toggleTimer()">开始</button>
+                        <button class="control-btn" onclick="resetTimer()">重置</button>
+                        <button class="control-btn" onclick="skipPhase()">跳过</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部滚动条 -->
+        <div class="footer">
+            <div class="scrolling-text">
+                <span style="color: #00ffff;">STAY FOCUSED</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #ff00ff;">CYBERPOMODORO v1.0</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #00ff00;">DRAG TO ADJUST</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #00ffff;">TOUCH ENABLED</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #ff00ff;">PRODUCTIVITY MAXIMIZED</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('timerCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 配置
+        const CENTER_X = 160;
+        const CENTER_Y = 160;
+        const RADIUS_OUTER = 140;
+        const RADIUS_INNER = 110;
+        const RADIUS_KNOB = 125;
+        
+        // 状态
+        let focusTime = 25; // 分钟
+        let restTime = 5;   // 分钟
+        let currentTime = focusTime * 60; // 秒
+        let totalTime = focusTime * 60;
+        let isRunning = false;
+        let isFocusPhase = true;
+        let timerInterval = null;
+        let completedPomodoros = 0;
+        let totalFocusMinutes = 0;
+        
+        // 触摸调节
+        let isDragging = false;
+        let dragStartAngle = 0;
+        let dragStartTime = 0;
+        
+        // 初始化
+        function init() {
+            loadStats();
+            drawTimer();
+            setupTouchControls();
+            updateDisplay();
+        }
+        
+        // 加载统计数据
+        function loadStats() {
+            const today = new Date().toDateString();
+            const saved = localStorage.getItem('pomodoroStats');
+            if (saved) {
+                const stats = JSON.parse(saved);
+                if (stats.date === today) {
+                    completedPomodoros = stats.completed || 0;
+                    totalFocusMinutes = stats.focusMinutes || 0;
+                }
+            }
+            updateStats();
+        }
+        
+        // 保存统计数据
+        function saveStats() {
+            const stats = {
+                date: new Date().toDateString(),
+                completed: completedPomodoros,
+                focusMinutes: totalFocusMinutes
+            };
+            localStorage.setItem('pomodoroStats', JSON.stringify(stats));
+        }
+        
+        // 更新统计显示
+        function updateStats() {
+            document.getElementById('completedCount').textContent = completedPomodoros;
+            document.getElementById('focusTime').textContent = totalFocusMinutes;
+            document.getElementById('totalSessions').textContent = completedPomodoros;
+            
+            const progress = Math.min((completedPomodoros / 8) * 100, 100);
+            document.getElementById('dailyProgress').style.width = progress + '%';
+        }
+        
+        // 当前旋钮角度（用于拖动时跟随手指）
+        let currentKnobAngle = -Math.PI / 2;
+        
+        // 绘制计时器
+        function drawTimer() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 外圈背景
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, RADIUS_OUTER, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // 内圈背景
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, RADIUS_INNER, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 计算进度角度
+            const progress = 1 - (currentTime / totalTime);
+            const endAngle = -Math.PI / 2 + (Math.PI * 2 * progress);
+            
+            // 使用当前旋钮角度（拖动时）或计算角度（正常运行时）
+            const knobAngle = isDragging ? currentKnobAngle : endAngle;
+            
+            // 进度环
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, RADIUS_KNOB, -Math.PI / 2, endAngle);
+            ctx.strokeStyle = isFocusPhase ? '#00ff00' : '#ff00ff';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = isFocusPhase ? '#00ff00' : '#ff00ff';
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // 刻度线
+            for (let i = 0; i < 60; i++) {
+                const angle = (Math.PI * 2 * i / 60) - Math.PI / 2;
+                const isMain = i % 5 === 0;
+                const r1 = RADIUS_OUTER + 5;
+                const r2 = RADIUS_OUTER + (isMain ? 12 : 8);
+                
+                ctx.beginPath();
+                ctx.moveTo(
+                    CENTER_X + Math.cos(angle) * r1,
+                    CENTER_Y + Math.sin(angle) * r1
+                );
+                ctx.lineTo(
+                    CENTER_X + Math.cos(angle) * r2,
+                    CENTER_Y + Math.sin(angle) * r2
+                );
+                ctx.strokeStyle = isMain ? 'rgba(0, 255, 255, 0.6)' : 'rgba(0, 255, 255, 0.3)';
+                ctx.lineWidth = isMain ? 2 : 1;
+                ctx.stroke();
+            }
+            
+            // 调节旋钮位置（跟随手指或进度）
+            const knobX = CENTER_X + Math.cos(knobAngle) * RADIUS_KNOB;
+            const knobY = CENTER_Y + Math.sin(knobAngle) * RADIUS_KNOB;
+            
+            // 旋钮外圈（拖动时更大更亮）
+            ctx.beginPath();
+            ctx.arc(knobX, knobY, isDragging ? 18 : 15, 0, Math.PI * 2);
+            ctx.fillStyle = isFocusPhase ? '#00ff00' : '#ff00ff';
+            ctx.shadowBlur = isDragging ? 30 : 20;
+            ctx.shadowColor = isFocusPhase ? '#00ff00' : '#ff00ff';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // 旋钮内圈
+            ctx.beginPath();
+            ctx.arc(knobX, knobY, isDragging ? 10 : 8, 0, Math.PI * 2);
+            ctx.fillStyle = isDragging ? '#fff' : 'rgba(255,255,255,0.8)';
+            ctx.fill();
+            
+            // 中心点
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
+            ctx.fill();
+            
+            // 拖动时显示时间提示
+            if (isDragging) {
+                const dragProgress = (knobAngle + Math.PI / 2) / (Math.PI * 2);
+                const dragMinutes = Math.round((1 - dragProgress) * 60);
+                const displayMinutes = Math.max(5, Math.min(60, dragMinutes));
+                
+                ctx.font = 'bold 16px Courier New';
+                ctx.fillStyle = '#00ffff';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#00ffff';
+                ctx.fillText(displayMinutes + ' min', CENTER_X, CENTER_Y + 50);
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        // 设置触摸控制
+        function setupTouchControls() {
+            const handleStart = (e) => {
+                e.preventDefault();
+                const pos = getEventPos(e);
+                const dist = Math.sqrt(
+                    Math.pow(pos.x - CENTER_X, 2) + 
+                    Math.pow(pos.y - CENTER_Y, 2)
+                );
+                
+                // 只有在环形区域才能调节
+                if (dist >= RADIUS_INNER - 30 && dist <= RADIUS_OUTER + 30) {
+                    isDragging = true;
+                    
+                    // 计算手指角度
+                    const angle = Math.atan2(pos.y - CENTER_Y, pos.x - CENTER_X);
+                    currentKnobAngle = angle;
+                    
+                    // 根据角度直接计算时间
+                    updateTimeFromAngle(angle);
+                    
+                    drawTimer();
+                }
+            };
+            
+            const handleMove = (e) => {
+                e.preventDefault();
+                if (!isDragging) return;
+                
+                const pos = getEventPos(e);
+                const angle = Math.atan2(pos.y - CENTER_Y, pos.x - CENTER_X);
+                
+                // 更新旋钮角度（跟随手指）
+                currentKnobAngle = angle;
+                
+                // 根据角度直接计算时间
+                updateTimeFromAngle(angle);
+                
+                drawTimer();
+            };
+            
+            const handleEnd = (e) => {
+                e.preventDefault();
+                isDragging = false;
+                // 保持当前角度，不跳回
+                drawTimer();
+            };
+            
+            // 根据角度更新时间
+            function updateTimeFromAngle(angle) {
+                // 将角度转换为进度（从-90度开始）
+                let normalizedAngle = angle + Math.PI / 2;
+                if (normalizedAngle < 0) normalizedAngle += Math.PI * 2;
+                
+                // 计算进度（0-1）
+                const progress = normalizedAngle / (Math.PI * 2);
+                
+                // 转换为时间（5-60分钟）
+                const minutes = Math.round((1 - progress) * 60);
+                const clampedMinutes = Math.max(5, Math.min(60, minutes));
+                
+                currentTime = clampedMinutes * 60;
+                totalTime = currentTime;
+                updateDisplay();
+            }
+            
+            // 触摸事件
+            canvas.addEventListener('touchstart', handleStart, { passive: false });
+            canvas.addEventListener('touchmove', handleMove, { passive: false });
+            canvas.addEventListener('touchend', handleEnd, { passive: false });
+            canvas.addEventListener('touchcancel', handleEnd, { passive: false });
+            
+            // 鼠标事件
+            canvas.addEventListener('mousedown', handleStart);
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('mouseup', handleEnd);
+        }
+        
+        // 获取事件位置
+        function getEventPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+        
+        // 更新显示
+        function updateDisplay() {
+            const minutes = Math.floor(currentTime / 60);
+            const seconds = currentTime % 60;
+            document.getElementById('timeDisplay').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // 设置预设
+        function setPreset(focus, rest) {
+            focusTime = focus;
+            restTime = rest;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 重置计时器
+            resetTimer();
+        }
+        
+        // 开始/暂停
+        function toggleTimer() {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+        
+        // 开始计时
+        function startTimer() {
+            isRunning = true;
+            const btn = document.getElementById('startBtn');
+            btn.textContent = '暂停';
+            btn.classList.remove('primary');
+            
+            timerInterval = setInterval(() => {
+                if (currentTime > 0) {
+                    currentTime--;
+                    updateDisplay();
+                    drawTimer();
+                } else {
+                    completePhase();
+                }
+            }, 1000);
+        }
+        
+        // 暂停计时
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            const btn = document.getElementById('startBtn');
+            btn.textContent = isFocusPhase ? '继续' : '继续休息';
+            btn.classList.add('primary');
+        }
+        
+        // 重置计时器
+        function resetTimer() {
+            pauseTimer();
+            currentTime = isFocusPhase ? focusTime * 60 : restTime * 60;
+            totalTime = currentTime;
+            updateDisplay();
+            drawTimer();
+            const btn = document.getElementById('startBtn');
+            btn.textContent = isFocusPhase ? '开始' : '开始休息';
+            btn.classList.add('primary');
+            hideCompleteOverlay();
+        }
+        
+        // 跳过当前阶段
+        function skipPhase() {
+            pauseTimer();
+            completePhase();
+        }
+        
+        // 完成当前阶段
+        function completePhase() {
+            pauseTimer();
+            showCompleteOverlay();
+            
+            if (isFocusPhase) {
+                completedPomodoros++;
+                totalFocusMinutes += focusTime;
+                saveStats();
+                updateStats();
+            }
+            
+            // 闪烁提示
+            document.querySelector('.timer-panel').classList.add('flashing');
+            setTimeout(() => {
+                document.querySelector('.timer-panel').classList.remove('flashing');
+            }, 5000);
+        }
+        
+        // 显示完成覆盖层
+        function showCompleteOverlay() {
+            const overlay = document.getElementById('completeOverlay');
+            const text = document.getElementById('completeText');
+            const subtext = document.getElementById('completeSubtext');
+            const continueBtn = document.getElementById('continueBtn');
+            
+            // 计算实际使用的时间（总时间 - 当前剩余时间）
+            const actualFocusMinutes = Math.floor((totalTime - currentTime) / 60);
+            const actualRestMinutes = Math.floor((totalTime - currentTime) / 60);
+            
+            if (isFocusPhase) {
+                overlay.classList.remove('rest');
+                text.textContent = '✓ 专注完成！';
+                text.style.color = '#00ff00';
+                subtext.innerHTML = '太棒了！你专注了 ' + actualFocusMinutes + ' 分钟。<br>休息 ' + restTime + ' 分钟，充充电吧。';
+                continueBtn.textContent = '开始休息 (' + restTime + ' 分钟)';
+                continueBtn.style.borderColor = '#ff00ff';
+                continueBtn.style.color = '#ff00ff';
+            } else {
+                overlay.classList.add('rest');
+                text.textContent = '✓ 休息结束！';
+                text.style.color = '#ff00ff';
+                subtext.innerHTML = '感觉精神焕发了吗？<br>准备开始下一个 ' + focusTime + ' 分钟专注吧！';
+                continueBtn.textContent = '开始专注 (' + focusTime + ' 分钟)';
+                continueBtn.style.borderColor = '#00ff00';
+                continueBtn.style.color = '#00ff00';
+            }
+            
+            overlay.classList.add('show');
+        }
+        
+        // 继续到下一阶段
+        function continueToNext() {
+            switchPhase();
+            hideCompleteOverlay();
+            // 自动开始下一阶段
+            setTimeout(() => {
+                startTimer();
+            }, 500);
+        }
+        
+        // 跳过休息/专注
+        function skipBreak() {
+            switchPhase();
+            hideCompleteOverlay();
+        }
+        
+        // 隐藏完成覆盖层
+        function hideCompleteOverlay() {
+            document.getElementById('completeOverlay').classList.remove('show');
+        }
+        
+        // 切换阶段
+        function switchPhase() {
+            isFocusPhase = !isFocusPhase;
+            currentTime = isFocusPhase ? focusTime * 60 : restTime * 60;
+            totalTime = currentTime;
+            
+            // 更新UI
+            const timeDisplay = document.getElementById('timeDisplay');
+            const modeLabel = document.getElementById('modeLabel');
+            const modeStatus = document.getElementById('modeStatus');
+            const startBtn = document.getElementById('startBtn');
+            
+            if (isFocusPhase) {
+                timeDisplay.classList.remove('rest');
+                timeDisplay.classList.add('focus');
+                modeLabel.textContent = '专注时间';
+                modeStatus.textContent = '专注模式';
+                modeStatus.classList.remove('rest');
+                startBtn.textContent = '开始';
+            } else {
+                timeDisplay.classList.remove('focus');
+                timeDisplay.classList.add('rest');
+                modeLabel.textContent = '休息时间';
+                modeStatus.textContent = '休息模式';
+                modeStatus.classList.add('rest');
+                startBtn.textContent = '开始休息';
+            }
+            
+            updateDisplay();
+            drawTimer();
+            startBtn.classList.add('primary');
+        }
+        
+        // 返回首页
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+        
+        // 初始化
+        init();
+    </script>
+</body>
+</html>

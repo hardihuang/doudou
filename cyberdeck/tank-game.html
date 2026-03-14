@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tank Battle - CyberDeck</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            font-family: 'Share Tech Mono', monospace;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
+            color: #00ffff;
+        }
+        
+        /* 扫描线效果 */
+        .scanlines::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 800px;
+            height: 480px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        /* 网格背景 */
+        .cyber-grid {
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        /* 霓虹发光效果 */
+        .neon-text {
+            text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+        }
+        
+        .neon-pink {
+            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+            color: #ff00ff;
+        }
+        
+        /* 面板样式 */
+        .cyber-panel {
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        /* 按钮样式 */
+        .cyber-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(255, 0, 255, 0.15));
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            color: #00ffff;
+            transition: all 0.2s ease;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+        
+        .cyber-btn:hover {
+            background: rgba(0, 255, 255, 0.25);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .cyber-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* 固定尺寸布局 */
+        .deck-container {
+            width: 800px;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            padding: 6px;
+            gap: 6px;
+        }
+        
+        .deck-header {
+            height: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 8px;
+        }
+        
+        .deck-main {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+            min-height: 0;
+        }
+        
+        .deck-left {
+            width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .deck-right {
+            width: 296px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        /* 游戏画布 */
+        #gameCanvas {
+            background: #050510;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        /* 状态指示器 */
+        .status-bar {
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .status-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        /* 覆盖层 */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+        }
+        
+        .overlay h1 {
+            font-size: 36px;
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 20px;
+        }
+        
+        .overlay p {
+            font-size: 12px;
+            color: #888;
+            margin: 4px 0;
+        }
+        
+        .key-hint {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 2px;
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            border-radius: 4px;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body class="scanlines cyber-grid">
+    <div class="deck-container">
+        <!-- 顶部标题栏 -->
+        <header class="deck-header cyber-panel">
+            <div class="flex items-center gap-3">
+                <h1 class="text-sm font-bold neon-text" style="font-family: 'Orbitron', sans-serif;">
+                    TANK <span class="neon-pink">BATTLE</span>
+                </h1>
+                <div class="flex items-center gap-1">
+                    <div class="w-2 h-2 rounded-full bg-green-500" id="statusDot"></div>
+                    <span class="text-green-400 text-xs" id="statusText">READY</span>
+                </div>
+            </div>
+            <div class="text-right flex items-center gap-4">
+                <div class="text-xs">
+                    <span class="text-gray-400">SCORE:</span>
+                    <span class="text-cyan-400 font-bold" id="score">0</span>
+                </div>
+                <div class="text-xs">
+                    <span class="text-gray-400">WAVE:</span>
+                    <span class="text-pink-400 font-bold" id="wave">1</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <div class="deck-main">
+            <!-- 左侧：游戏区域（480px宽） -->
+            <div class="deck-left cyber-panel relative">
+                <div class="flex justify-between items-center px-2 py-1 border-b border-cyan-500/30">
+                    <span class="text-cyan-400 text-xs font-bold">🎮 BATTLEFIELD</span>
+                    <span class="text-xs text-gray-400">TACTICAL DISPLAY</span>
+                </div>
+                
+                <div class="flex-1 relative">
+                    <canvas id="gameCanvas" width="476" height="380"></canvas>
+                    
+                    <!-- 开始/游戏结束覆盖层 -->
+                    <div id="startOverlay" class="overlay">
+                        <h1 class="neon-text">TANK BATTLE</h1>
+                        <p class="text-cyan-300 mb-4">Destroy enemy tanks. Survive.</p>
+                        <button class="cyber-btn px-6 py-3 rounded text-sm font-bold" onclick="startGame()">
+                            INITIATE COMBAT
+                        </button>
+                        <div class="mt-6 text-center">
+                            <p class="text-gray-500 mb-2">CONTROLS</p>
+                            <div>
+                                <span class="key-hint">W</span>
+                                <span class="key-hint">A</span>
+                                <span class="key-hint">S</span>
+                                <span class="key-hint">D</span>
+                                <span class="mx-2 text-gray-500">|</span>
+                                <span class="key-hint">SPACE</span>
+                            </div>
+                            <p class="text-gray-600 text-xs mt-2">Move | Shoot</p>
+                        </div>
+                    </div>
+                    
+                    <div id="gameOverOverlay" class="overlay" style="display: none;">
+                        <h1 class="text-red-500" style="text-shadow: 0 0 10px #ff0000;">MISSION FAILED</h1>
+                        <p class="text-cyan-300">Final Score: <span id="finalScore" class="text-white font-bold">0</span></p>
+                        <p class="text-pink-300">Wave Reached: <span id="finalWave" class="text-white font-bold">1</span></p>
+                        <button class="cyber-btn px-6 py-3 rounded text-sm font-bold mt-4" onclick="startGame()">
+                            RETRY MISSION
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：状态面板（296px宽） -->
+            <div class="deck-right">
+                <!-- 玩家状态 -->
+                <div class="cyber-panel p-2">
+                    <div class="text-xs text-gray-400 mb-1">PLAYER STATUS</div>
+                    <div class="space-y-2">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-cyan-400">HULL INTEGRITY</span>
+                                <span class="text-green-400" id="healthText">100%</span>
+                            </div>
+                            <div class="status-bar">
+                                <div class="status-fill bg-gradient-to-r from-green-500 to-cyan-500" id="healthBar" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-pink-400">WEAPON TEMP</span>
+                                <span class="text-yellow-400" id="ammoText">READY</span>
+                            </div>
+                            <div class="status-bar">
+                                <div class="status-fill bg-gradient-to-r from-yellow-500 to-red-500" id="ammoBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 战场统计 -->
+                <div class="cyber-panel p-2">
+                    <div class="text-xs text-gray-400 mb-1">BATTLE STATS</div>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">ENEMIES:</span>
+                            <span class="text-red-400" id="enemyCount">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">KILLS:</span>
+                            <span class="text-cyan-400" id="killCount">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">ACCURACY:</span>
+                            <span class="text-green-400" id="accuracy">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 控制面板 -->
+                <div class="cyber-panel p-2">
+                    <div class="text-xs text-gray-400 mb-1">TACTICAL CONTROLS</div>
+                    <div class="grid grid-cols-2 gap-1">
+                        <button class="cyber-btn py-2 rounded text-xs" onclick="togglePause()">PAUSE</button>
+                        <button class="cyber-btn py-2 rounded text-xs" onclick="window.location.href='index.html'">EXIT</button>
+                    </div>
+                </div>
+
+                <!-- 迷你地图区域 -->
+                <div class="cyber-panel p-2 flex-1">
+                    <div class="text-xs text-gray-400 mb-1">RADAR</div>
+                    <div class="w-full h-full bg-black/50 border border-cyan-500/30 rounded flex items-center justify-center relative" id="radar">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-20 h-20 border border-cyan-500/20 rounded-full"></div>
+                            <div class="w-40 h-40 border border-cyan-500/10 rounded-full absolute"></div>
+                        </div>
+                        <div class="text-xs text-cyan-500/50">SCANNING...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameRunning = false, paused = false;
+let score = 0, wave = 1, kills = 0, shotsFired = 0, shotsHit = 0;
+let keys = {};
+
+let player, bullets = [], enemies = [], particles = [];
+
+class Tank {
+    constructor(x, y, color, isPlayer = false) {
+        this.x = x; this.y = y;
+        this.width = 30; this.height = 30;
+        this.angle = 0;
+        this.speed = isPlayer ? 3 : 1.5;
+        this.color = color;
+        this.isPlayer = isPlayer;
+        this.health = 100;
+        this.maxHealth = 100;
+        this.cooldown = 0;
+    }
+    
+    update() {
+        if (this.cooldown > 0) this.cooldown--;
+        
+        if (this.isPlayer) {
+            let dx = 0, dy = 0;
+            if (keys['w'] || keys['arrowup']) dy = -1;
+            if (keys['s'] || keys['arrowdown']) dy = 1;
+            if (keys['a'] || keys['arrowleft']) dx = -1;
+            if (keys['d'] || keys['arrowright']) dx = 1;
+            
+            if (dx !== 0 || dy !== 0) {
+                this.angle = Math.atan2(dy, dx);
+                this.x += dx * this.speed;
+                this.y += dy * this.speed;
+            }
+            
+            this.x = Math.max(20, Math.min(canvas.width - 20, this.x));
+            this.y = Math.max(20, Math.min(canvas.height - 20, this.y));
+            
+            if (keys[' '] && this.cooldown === 0) {
+                this.shoot();
+                this.cooldown = 20;
+                shotsFired++;
+            }
+        } else {
+            const dx = player.x - this.x;
+            const dy = player.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 80) {
+                this.angle = Math.atan2(dy, dx);
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+            }
+            
+            if (dist < 250 && this.cooldown === 0) {
+                this.shoot();
+                this.cooldown = 40 + Math.random() * 40;
+            }
+        }
+    }
+    
+    shoot() {
+        const bx = this.x + Math.cos(this.angle) * 20;
+        const by = this.y + Math.sin(this.angle) * 20;
+        bullets.push(new Bullet(bx, by, this.angle, this.isPlayer));
+    }
+    
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        
+        // 坦克主体
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-15, -12, 25, 24);
+        
+        // 履带
+        ctx.fillStyle = '#333';
+        ctx.fillRect(-17, -15, 30, 4);
+        ctx.fillRect(-17, 11, 30, 4);
+        
+        // 炮管
+        ctx.fillStyle = '#555';
+        ctx.fillRect(0, -3, 22, 6);
+        
+        // 炮塔
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        ctx.restore();
+    }
+}
+
+class Bullet {
+    constructor(x, y, angle, isPlayer) {
+        this.x = x; this.y = y;
+        this.angle = angle;
+        this.speed = 8;
+        this.isPlayer = isPlayer;
+        this.radius = 3;
+    }
+    
+    update() {
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+    }
+    
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.isPlayer ? '#0ff' : '#f00';
+        ctx.fill();
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = this.isPlayer ? '#0ff' : '#f00';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+    
+    isOffScreen() {
+        return this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height;
+    }
+}
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x; this.y = y;
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = (Math.random() - 0.5) * 8;
+        this.life = 1;
+        this.color = color;
+        this.size = Math.random() * 4 + 2;
+    }
+    
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx *= 0.95;
+        this.vy *= 0.95;
+        this.life -= 0.03;
+    }
+    
+    draw() {
+        ctx.globalAlpha = this.life;
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        ctx.globalAlpha = 1;
+    }
+}
+
+function createExplosion(x, y, color) {
+    for (let i = 0; i < 15; i++) {
+        particles.push(new Particle(x, y, color));
+    }
+}
+
+function spawnWave() {
+    const enemyCount = 2 + wave;
+    for (let i = 0; i < enemyCount; i++) {
+        let ex, ey;
+        do {
+            ex = Math.random() * (canvas.width - 100) + 50;
+            ey = Math.random() * (canvas.height - 100) + 50;
+        } while (Math.abs(ex - player.x) < 150 && Math.abs(ey - player.y) < 150);
+        
+        enemies.push(new Tank(ex, ey, '#ff3366'));
+    }
+}
+
+function checkCollisions() {
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        
+        if (b.isPlayer) {
+            for (let j = enemies.length - 1; j >= 0; j--) {
+                const e = enemies[j];
+                const dist = Math.sqrt((b.x - e.x) ** 2 + (b.y - e.y) ** 2);
+                if (dist < 20) {
+                    e.health -= 34;
+                    createExplosion(b.x, b.y, '#ff0');
+                    bullets.splice(i, 1);
+                    shotsHit++;
+                    
+                    if (e.health <= 0) {
+                        createExplosion(e.x, e.y, '#ff3366');
+                        enemies.splice(j, 1);
+                        score += 100;
+                        kills++;
+                    }
+                    break;
+                }
+            }
+        } else {
+            const dist = Math.sqrt((b.x - player.x) ** 2 + (b.y - player.y) ** 2);
+            if (dist < 20) {
+                player.health -= 15;
+                createExplosion(b.x, b.y, '#f00');
+                bullets.splice(i, 1);
+            }
+        }
+    }
+    
+    if (enemies.length === 0 && gameRunning) {
+        wave++;
+        spawnWave();
+    }
+}
+
+function updateUI() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('wave').textContent = wave;
+    document.getElementById('healthText').textContent = Math.max(0, player.health) + '%';
+    document.getElementById('healthBar').style.width = Math.max(0, player.health) + '%';
+    document.getElementById('ammoBar').style.width = (player.cooldown / 20 * 100) + '%';
+    document.getElementById('ammoText').textContent = player.cooldown === 0 ? 'READY' : 'COOLING';
+    document.getElementById('enemyCount').textContent = enemies.length;
+    document.getElementById('killCount').textContent = kills;
+    document.getElementById('accuracy').textContent = shotsFired > 0 ? Math.round(shotsHit / shotsFired * 100) + '%' : '100%';
+}
+
+function update() {
+    if (!gameRunning || paused) return;
+    
+    player.update();
+    
+    bullets.forEach((b, i) => {
+        b.update();
+        if (b.isOffScreen()) bullets.splice(i, 1);
+    });
+    
+    enemies.forEach(e => e.update());
+    particles.forEach((p, i) => {
+        p.update();
+        if (p.life <= 0) particles.splice(i, 1);
+    });
+    
+    checkCollisions();
+    updateUI();
+    
+    if (player.health <= 0) {
+        gameOver();
+    }
+}
+
+function draw() {
+    ctx.fillStyle = '#050510';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 网格
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+    
+    if (gameRunning) {
+        player.draw();
+        enemies.forEach(e => e.draw());
+        bullets.forEach(b => b.draw());
+        particles.forEach(p => p.draw());
+    }
+}
+
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+    player = new Tank(canvas.width/2, canvas.height/2, '#00ffff', true);
+    bullets = []; enemies = []; particles = [];
+    score = 0; wave = 1; kills = 0; shotsFired = 0; shotsHit = 0;
+    spawnWave();
+    gameRunning = true;
+    paused = false;
+    document.getElementById('startOverlay').style.display = 'none';
+    document.getElementById('gameOverOverlay').style.display = 'none';
+    document.getElementById('statusDot').className = 'w-2 h-2 rounded-full bg-green-500';
+    document.getElementById('statusText').textContent = 'COMBAT';
+    document.getElementById('statusText').className = 'text-green-400 text-xs';
+}
+
+function gameOver() {
+    gameRunning = false;
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('finalWave').textContent = wave;
+    document.getElementById('gameOverOverlay').style.display = 'flex';
+    document.getElementById('statusDot').className = 'w-2 h-2 rounded-full bg-red-500';
+    document.getElementById('statusText').textContent = 'FAILED';
+    document.getElementById('statusText').className = 'text-red-400 text-xs';
+}
+
+function togglePause() {
+    if (!gameRunning) return;
+    paused = !paused;
+    document.getElementById('statusText').textContent = paused ? 'PAUSED' : 'COMBAT';
+}
+
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+gameLoop();
+</script>
+</body>
+</html>

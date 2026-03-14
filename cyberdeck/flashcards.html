@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CyberFlashcards // Word Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        html, body {
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 800px;
+            height: 480px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 800px;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            padding: 6px;
+        }
+        
+        /* 顶部进度条 */
+        .progress-header {
+            height: 8px;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-bottom: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill-top {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #ffdd00);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        
+        /* 顶部信息栏 */
+        .header {
+            height: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 0 15px;
+            margin-bottom: 6px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .home-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            color: #00ffff;
+            padding: 6px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .streak-display {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 100, 0, 0.2);
+            border: 1px solid rgba(255, 100, 0, 0.5);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        
+        .streak-icon {
+            font-size: 16px;
+        }
+        
+        .streak-text {
+            font-size: 12px;
+            color: #ffaa00;
+            font-weight: bold;
+        }
+        
+        .score-display-top {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .score-icon {
+            font-size: 18px;
+        }
+        
+        .score-value-top {
+            font-size: 16px;
+            color: #ffdd00;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ffdd00;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        /* 题目提示 */
+        .question-prompt {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        /* 闪卡 */
+        .flashcard-container {
+            width: 450px;
+            height: 200px;
+            position: relative;
+            perspective: 1000px;
+        }
+        
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+        
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+        
+        .flashcard-front {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 100, 255, 0.1));
+            border-color: #00ffff;
+        }
+        
+        .flashcard-back {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(255, 0, 100, 0.1));
+            border-color: #ff00ff;
+            transform: rotateY(180deg);
+        }
+        
+        .word-text {
+            font-size: 42px;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+            margin-bottom: 8px;
+        }
+        
+        .word-phonetic {
+            font-size: 18px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        .word-meaning {
+            font-size: 24px;
+            color: #ffdd00;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 221, 0, 0.5);
+            margin-bottom: 8px;
+        }
+        
+        .word-example {
+            font-size: 14px;
+            color: #aaa;
+            text-align: center;
+            padding: 0 30px;
+            font-style: italic;
+        }
+        
+        .flip-hint {
+            position: absolute;
+            bottom: 12px;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        /* 发音按钮 */
+        .speak-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 255, 255, 0.2);
+            border: 2px solid #00ffff;
+            border-radius: 50%;
+            color: #00ffff;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .speak-btn:hover {
+            background: rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            transform: scale(1.1);
+        }
+        
+        /* 控制按钮区 */
+        .controls-area {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .control-btn {
+            width: 120px;
+            height: 60px;
+            border: 3px solid;
+            border-radius: 12px;
+            font-size: 13px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .control-btn.correct {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 200, 0, 0.1));
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+        
+        .control-btn.correct:hover {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        .control-btn.wrong {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.2), rgba(200, 0, 0, 0.1));
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+        
+        .control-btn.wrong:hover {
+            background: rgba(255, 0, 0, 0.3);
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        .btn-icon {
+            font-size: 22px;
+        }
+        
+        /* 底部状态栏 */
+        .footer {
+            height: 24px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            font-size: 11px;
+        }
+        
+        .footer-left {
+            color: #888;
+        }
+        
+        .footer-center {
+            color: #00ffff;
+        }
+        
+        .footer-right {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .stat-icon {
+            font-size: 12px;
+        }
+        
+        .stat-value {
+            color: #ffdd00;
+            font-weight: bold;
+        }
+        
+        /* 反馈动画 */
+        .feedback-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 200;
+            transition: all 0.3s;
+        }
+        
+        .feedback-overlay.show {
+            opacity: 1;
+            animation: feedbackPop 0.5s ease;
+        }
+        
+        @keyframes feedbackPop {
+            0% { transform: translate(-50%, -50%) scale(0.5); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        /* 完成弹窗 */
+        .completion-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+        }
+        
+        .completion-modal.show {
+            display: flex;
+        }
+        
+        .completion-content {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 3px solid #00ffff;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
+        }
+        
+        .completion-title {
+            font-size: 28px;
+            color: #00ff00;
+            text-shadow: 0 0 20px #00ff00;
+            margin-bottom: 20px;
+        }
+        
+        .completion-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+        
+        .completion-stat {
+            text-align: center;
+        }
+        
+        .completion-number {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .completion-number.correct { color: #00ff00; }
+        .completion-number.wrong { color: #ff0000; }
+        .completion-number.score { color: #ffdd00; }
+        
+        .completion-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 255, 0, 0.1));
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 15px 40px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+        }
+        
+        .restart-btn:hover {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部进度条 -->
+        <div class="progress-header">
+            <div class="progress-fill-top" id="progressBarTop" style="width: 0%"></div>
+        </div>
+        
+        <!-- 顶部信息栏 -->
+        <header class="header">
+            <div class="header-left">
+                <button class="home-btn" onclick="goHome()">◀ 首页</button>
+                <div class="streak-display" id="streakDisplay" style="display: none;">
+                    <span class="streak-icon">🔥</span>
+                    <span class="streak-text" id="streakText">连击 x0</span>
+                </div>
+            </div>
+            <div class="score-display-top">
+                <span class="score-icon">💎</span>
+                <span class="score-value-top" id="scoreTop">0</span>
+            </div>
+        </header>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="question-prompt">选择你认识的单词</div>
+            
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard" onclick="flipCard()">
+                    <div class="flashcard-face flashcard-front">
+                        <button class="speak-btn" onclick="speakWord(event)" title="发音">🔊</button>
+                        <div class="word-text" id="wordText">absent</div>
+                        <div class="word-phonetic" id="wordPhonetic">/ˈæbsənt/</div>
+                        <div class="flip-hint">点击翻转 ▶</div>
+                    </div>
+                    <div class="flashcard-face flashcard-back">
+                        <div class="word-meaning" id="wordMeaning">缺席的，不在的</div>
+                        <div class="word-example" id="wordExample">"He was absent from school."</div>
+                        <div class="flip-hint">◀ 点击翻回</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls-area">
+                <button class="control-btn wrong" onclick="markWrong()">
+                    <span class="btn-icon">✗</span>
+                    <span>不认识</span>
+                </button>
+                <button class="control-btn correct" onclick="markCorrect()">
+                    <span class="btn-icon">✓</span>
+                    <span>认识</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 底部状态栏 -->
+        <div class="footer">
+            <div class="footer-left">CYBERFLASHCARDS v1.0</div>
+            <div class="footer-center" id="cardCounter">1 / 15</div>
+            <div class="footer-right">
+                <div class="stat-item">
+                    <span class="stat-icon">✓</span>
+                    <span class="stat-value" id="correctStat">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">✗</span>
+                    <span class="stat-value" id="wrongStat">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 反馈动画 -->
+    <div class="feedback-overlay" id="feedbackOverlay"></div>
+    
+    <!-- 完成弹窗 -->
+    <div class="completion-modal" id="completionModal">
+        <div class="completion-content">
+            <div class="completion-title">🎉 学习完成！</div>
+            <div class="completion-stats">
+                <div class="completion-stat">
+                    <div class="completion-number correct" id="finalCorrect">0</div>
+                    <div class="completion-label">已掌握</div>
+                </div>
+                <div class="completion-stat">
+                    <div class="completion-number wrong" id="finalWrong">0</div>
+                    <div class="completion-label">需复习</div>
+                </div>
+                <div class="completion-stat">
+                    <div class="completion-number score" id="finalScore">0</div>
+                    <div class="completion-label">总得分</div>
+                </div>
+            </div>
+            <button class="restart-btn" onclick="restartGame()">再学一次</button>
+        </div>
+    </div>
+    
+    <script>
+        // 15个中学生英语单词
+        const words = [
+            { word: 'abandon', phonetic: '/əˈbændən/', meaning: '放弃，抛弃', example: 'They had to abandon their car.' },
+            { word: 'ability', phonetic: '/əˈbɪləti/', meaning: '能力，才能', example: 'She has the ability to sing.' },
+            { word: 'absent', phonetic: '/ˈæbsənt/', meaning: '缺席的，不在的', example: 'He was absent from school.' },
+            { word: 'absolute', phonetic: '/ˈæbsəluːt/', meaning: '绝对的，完全的', example: 'I have absolute confidence.' },
+            { word: 'absorb', phonetic: '/əbˈsɔːrb/', meaning: '吸收，理解', example: 'Plants absorb sunlight.' },
+            { word: 'abstract', phonetic: '/ˈæbstrækt/', meaning: '抽象的', example: 'This painting is abstract.' },
+            { word: 'abundant', phonetic: '/əˈbʌndənt/', meaning: '丰富的，充裕的', example: 'The region is abundant in oil.' },
+            { word: 'academic', phonetic: '/ˌækəˈdemɪk/', meaning: '学术的，学院的', example: 'She has high academic standards.' },
+            { word: 'academy', phonetic: '/əˈkædəmi/', meaning: '学院，研究院', example: 'He studied at a military academy.' },
+            { word: 'accelerate', phonetic: '/əkˈseləreɪt/', meaning: '加速，促进', example: 'The car began to accelerate.' },
+            { word: 'accent', phonetic: '/ˈæksent/', meaning: '口音，重音', example: 'She speaks with a British accent.' },
+            { word: 'accept', phonetic: '/əkˈsept/', meaning: '接受，认可', example: 'I accept your apology.' },
+            { word: 'access', phonetic: '/ˈækses/', meaning: '进入，使用权', example: 'Students have access to the library.' },
+            { word: 'accident', phonetic: '/ˈæksɪdənt/', meaning: '事故，意外', example: 'There was a car accident.' },
+            { word: 'accompany', phonetic: '/əˈkʌmpəni/', meaning: '陪伴，伴随', example: 'She accompanied me to the doctor.' }
+        ];
+        
+        let currentIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let streak = 0;
+        let wordStatus = new Array(words.length).fill('pending');
+        
+        function init() {
+            shuffleWords();
+            updateCard();
+            updateStats();
+        }
+        
+        function shuffleWords() {
+            for (let i = words.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [words[i], words[j]] = [words[j], words[i]];
+            }
+        }
+        
+        function updateCard() {
+            if (currentIndex >= words.length) {
+                showCompletion();
+                return;
+            }
+            
+            const word = words[currentIndex];
+            document.getElementById('wordText').textContent = word.word;
+            document.getElementById('wordPhonetic').textContent = word.phonetic;
+            document.getElementById('wordMeaning').textContent = word.meaning;
+            document.getElementById('wordExample').textContent = '"' + word.example + '"';
+            document.getElementById('cardCounter').textContent = (currentIndex + 1) + ' / ' + words.length;
+            
+            // 重置翻转状态
+            document.getElementById('flashcard').classList.remove('flipped');
+            
+            // 更新进度条
+            const progress = ((currentIndex) / words.length) * 100;
+            document.getElementById('progressBarTop').style.width = progress + '%';
+        }
+        
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+        }
+        
+        function speakWord(event) {
+            event.stopPropagation();
+            const word = words[currentIndex].word;
+            
+            // 使用 Web Speech API
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        function markCorrect() {
+            wordStatus[currentIndex] = 'correct';
+            correctCount++;
+            streak++;
+            
+            // 连击 bonus
+            let points = 10;
+            if (streak >= 3) {
+                points = 15;
+                showStreak();
+            }
+            score += points;
+            
+            showFeedback('✓', '#00ff00');
+            updateStats();
+            
+            setTimeout(() => {
+                currentIndex++;
+                updateCard();
+            }, 300);
+        }
+        
+        function markWrong() {
+            wordStatus[currentIndex] = 'wrong';
+            wrongCount++;
+            streak = 0;
+            hideStreak();
+            
+            showFeedback('✗', '#ff0000');
+            updateStats();
+            
+            setTimeout(() => {
+                currentIndex++;
+                updateCard();
+            }, 300);
+        }
+        
+        function showFeedback(symbol, color) {
+            const overlay = document.getElementById('feedbackOverlay');
+            overlay.textContent = symbol;
+            overlay.style.color = color;
+            overlay.classList.add('show');
+            
+            setTimeout(() => {
+                overlay.classList.remove('show');
+            }, 500);
+        }
+        
+        function showStreak() {
+            const display = document.getElementById('streakDisplay');
+            const text = document.getElementById('streakText');
+            text.textContent = '连击 x' + streak;
+            display.style.display = 'flex';
+        }
+        
+        function hideStreak() {
+            document.getElementById('streakDisplay').style.display = 'none';
+        }
+        
+        function updateStats() {
+            document.getElementById('scoreTop').textContent = score;
+            document.getElementById('correctStat').textContent = correctCount;
+            document.getElementById('wrongStat').textContent = wrongCount;
+        }
+        
+        function showCompletion() {
+            document.getElementById('finalCorrect').textContent = correctCount;
+            document.getElementById('finalWrong').textContent = wrongCount;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('completionModal').classList.add('show');
+            
+            // 进度条 100%
+            document.getElementById('progressBarTop').style.width = '100%';
+        }
+        
+        function restartGame() {
+            currentIndex = 0;
+            score = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            streak = 0;
+            wordStatus = new Array(words.length).fill('pending');
+            
+            document.getElementById('completionModal').classList.remove('show');
+            hideStreak();
+            shuffleWords();
+            updateCard();
+            updateStats();
+        }
+        
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('completionModal').classList.contains('show')) return;
+            
+            if (e.key === 'ArrowLeft') markWrong();
+            if (e.key === 'ArrowRight') markCorrect();
+            if (e.key === ' ' || e.key === 'Enter') flipCard();
+        });
+        
+        init();
+    </script>
+</body>
+</html>

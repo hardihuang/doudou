@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CyberCalc // OpenClaw</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        html, body {
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+        }
+        
+        /* 扫描线效果 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 800px;
+            height: 480px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 800px;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            padding: 6px;
+        }
+        
+        /* 顶部标题栏 */
+        .header {
+            height: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 0 10px;
+            margin-bottom: 6px;
+        }
+        
+        .header h1 {
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+        }
+        
+        .header .neon-pink {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+        }
+        
+        .back-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #00ffff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        /* 主内容区 */
+        .main-area {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+        }
+        
+        /* 左侧计算器面板 */
+        .calc-panel {
+            width: 400px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+        
+        .panel-title {
+            font-size: 11px;
+            color: #00ffff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+            padding-bottom: 4px;
+        }
+        
+        /* 显示屏 */
+        .display {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 10px;
+            text-align: right;
+            min-height: 80px;
+        }
+        
+        .display-history {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+            min-height: 16px;
+        }
+        
+        .display-main {
+            font-size: 32px;
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        /* 按钮网格 */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .calc-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.05));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            color: #00ffff;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        }
+        
+        .calc-btn:hover, .calc-btn:active {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+            transform: scale(1.02);
+        }
+        
+        .calc-btn.operator {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.1), rgba(255, 0, 255, 0.05));
+            border-color: rgba(255, 0, 255, 0.3);
+            color: #ff00ff;
+        }
+        
+        .calc-btn.operator:hover, .calc-btn.operator:active {
+            background: rgba(255, 0, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
+        }
+        
+        .calc-btn.equals {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.15), rgba(0, 255, 0, 0.05));
+            border-color: rgba(0, 255, 0, 0.4);
+            color: #00ff00;
+            grid-column: span 2;
+        }
+        
+        .calc-btn.equals:hover, .calc-btn.equals:active {
+            background: rgba(0, 255, 0, 0.25);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+        }
+        
+        .calc-btn.clear {
+            background: linear-gradient(135deg, rgba(255, 50, 50, 0.1), rgba(255, 50, 50, 0.05));
+            border-color: rgba(255, 50, 50, 0.3);
+            color: #ff5050;
+        }
+        
+        .calc-btn.clear:hover, .calc-btn.clear:active {
+            background: rgba(255, 50, 50, 0.2);
+            box-shadow: 0 0 15px rgba(255, 50, 50, 0.4);
+        }
+        
+        /* 右侧面板 */
+        .side-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .panel {
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        /* 历史记录 */
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+        
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .history-list::-webkit-scrollbar-track {
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+        
+        .history-item {
+            padding: 6px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .history-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .history-expr {
+            color: #888;
+            font-size: 10px;
+        }
+        
+        .history-result {
+            color: #00ff00;
+            font-size: 12px;
+            text-shadow: 0 0 3px #00ff00;
+        }
+        
+        .history-empty {
+            text-align: center;
+            color: #555;
+            padding: 20px;
+            font-size: 11px;
+        }
+        
+        /* 功能按钮 */
+        .func-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .func-btn {
+            flex: 1;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            color: #00ffff;
+            padding: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .func-btn:hover {
+            background: rgba(0, 255, 255, 0.15);
+            border-color: rgba(0, 255, 255, 0.4);
+        }
+        
+        /* 统计信息 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 8px;
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+        
+        .stat-label {
+            font-size: 9px;
+            color: #888;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题栏 -->
+        <header class="header">
+            <button class="back-btn" onclick="goBack()">← BACK</button>
+            <h1>CYBER<span class="neon-pink">CALC</span></h1>
+            <div style="font-size: 12px; color: #00ff00;">● READY</div>
+        </header>
+        
+        <!-- 主内容区 -->
+        <div class="main-area">
+            <!-- 左侧计算器 -->
+            <div class="calc-panel">
+                <div class="panel-title">CALCULATOR</div>
+                
+                <!-- 显示屏 -->
+                <div class="display">
+                    <div class="display-history" id="displayHistory"></div>
+                    <div class="display-main" id="displayMain">0</div>
+                </div>
+                
+                <!-- 按钮网格 -->
+                <div class="buttons-grid">
+                    <button class="calc-btn clear" onclick="clearAll()">AC</button>
+                    <button class="calc-btn clear" onclick="clearEntry()">CE</button>
+                    <button class="calc-btn operator" onclick="appendOperator('/')">÷</button>
+                    <button class="calc-btn operator" onclick="appendOperator('*')">×</button>
+                    
+                    <button class="calc-btn" onclick="appendNumber('7')">7</button>
+                    <button class="calc-btn" onclick="appendNumber('8')">8</button>
+                    <button class="calc-btn" onclick="appendNumber('9')">9</button>
+                    <button class="calc-btn operator" onclick="appendOperator('-')">−</button>
+                    
+                    <button class="calc-btn" onclick="appendNumber('4')">4</button>
+                    <button class="calc-btn" onclick="appendNumber('5')">5</button>
+                    <button class="calc-btn" onclick="appendNumber('6')">6</button>
+                    <button class="calc-btn operator" onclick="appendOperator('+')">+</button>
+                    
+                    <button class="calc-btn" onclick="appendNumber('1')">1</button>
+                    <button class="calc-btn" onclick="appendNumber('2')">2</button>
+                    <button class="calc-btn" onclick="appendNumber('3')">3</button>
+                    <button class="calc-btn" onclick="appendDecimal()">.</button>
+                    
+                    <button class="calc-btn" onclick="appendNumber('0')">0</button>
+                    <button class="calc-btn" onclick="toggleSign()">+/-</button>
+                    <button class="calc-btn equals" onclick="calculate()">=</button>
+                </div>
+            </div>
+            
+            <!-- 右侧面板 -->
+            <div class="side-panel">
+                <!-- 历史记录 -->
+                <div class="panel">
+                    <div class="panel-title">HISTORY</div>
+                    <div class="history-list" id="historyList">
+                        <div class="history-empty">No calculations yet</div>
+                    </div>
+                </div>
+                
+                <!-- 功能按钮 -->
+                <div class="panel">
+                    <div class="panel-title">FUNCTIONS</div>
+                    <div class="func-buttons">
+                        <button class="func-btn" onclick="memoryStore()">M+</button>
+                        <button class="func-btn" onclick="memoryRecall()">MR</button>
+                        <button class="func-btn" onclick="memoryClear()">MC</button>
+                        <button class="func-btn" onclick="clearHistory()">Clear</button>
+                    </div>
+                </div>
+                
+                <!-- 统计 -->
+                <div class="panel">
+                    <div class="panel-title">STATS</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="calcCount">0</div>
+                            <div class="stat-label">CALCULATIONS</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="memoryValue">-</div>
+                            <div class="stat-label">MEMORY</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 计算器状态
+        let currentValue = '0';
+        let previousValue = '';
+        let operator = '';
+        let shouldResetDisplay = false;
+        let memory = null;
+        let history = [];
+        let calcCount = 0;
+        
+        // 更新显示
+        function updateDisplay() {
+            document.getElementById('displayMain').textContent = currentValue;
+            const historyText = previousValue && operator ? `${previousValue} ${operator}` : '';
+            document.getElementById('displayHistory').textContent = historyText;
+        }
+        
+        // 添加数字
+        function appendNumber(num) {
+            if (shouldResetDisplay) {
+                currentValue = num;
+                shouldResetDisplay = false;
+            } else {
+                currentValue = currentValue === '0' ? num : currentValue + num;
+            }
+            updateDisplay();
+        }
+        
+        // 添加小数点
+        function appendDecimal() {
+            if (shouldResetDisplay) {
+                currentValue = '0.';
+                shouldResetDisplay = false;
+            } else if (!currentValue.includes('.')) {
+                currentValue += '.';
+            }
+            updateDisplay();
+        }
+        
+        // 添加运算符
+        function appendOperator(op) {
+            if (operator && !shouldResetDisplay) {
+                calculate();
+            }
+            previousValue = currentValue;
+            operator = op;
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+        
+        // 计算
+        function calculate() {
+            if (!operator || !previousValue) return;
+            
+            const prev = parseFloat(previousValue);
+            const current = parseFloat(currentValue);
+            let result;
+            
+            switch (operator) {
+                case '+': result = prev + current; break;
+                case '-': result = prev - current; break;
+                case '*': result = prev * current; break;
+                case '/': result = current !== 0 ? prev / current : 'Error'; break;
+                default: return;
+            }
+            
+            // 添加到历史
+            addToHistory(`${previousValue} ${operator} ${currentValue}`, result);
+            
+            currentValue = String(result);
+            previousValue = '';
+            operator = '';
+            shouldResetDisplay = true;
+            calcCount++;
+            updateStats();
+            updateDisplay();
+        }
+        
+        // 切换正负号
+        function toggleSign() {
+            if (currentValue !== '0') {
+                currentValue = currentValue.startsWith('-') ? currentValue.slice(1) : '-' + currentValue;
+                updateDisplay();
+            }
+        }
+        
+        // 清除所有
+        function clearAll() {
+            currentValue = '0';
+            previousValue = '';
+            operator = '';
+            shouldResetDisplay = false;
+            updateDisplay();
+        }
+        
+        // 清除当前输入
+        function clearEntry() {
+            currentValue = '0';
+            updateDisplay();
+        }
+        
+        // 添加到历史
+        function addToHistory(expr, result) {
+            history.unshift({ expr, result, time: new Date().toLocaleTimeString() });
+            if (history.length > 20) history.pop();
+            renderHistory();
+        }
+        
+        // 渲染历史
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<div class="history-empty">No calculations yet</div>';
+                return;
+            }
+            
+            list.innerHTML = history.map((item, index) => `
+                <div class="history-item" onclick="useHistory(${index})">
+                    <div class="history-expr">${item.expr} =</div>
+                    <div class="history-result">${item.result}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 使用历史记录
+        function useHistory(index) {
+            currentValue = String(history[index].result);
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+        
+        // 清除历史
+        function clearHistory() {
+            history = [];
+            renderHistory();
+        }
+        
+        // 内存功能
+        function memoryStore() {
+            memory = parseFloat(currentValue);
+            updateStats();
+        }
+        
+        function memoryRecall() {
+            if (memory !== null) {
+                currentValue = String(memory);
+                shouldResetDisplay = true;
+                updateDisplay();
+            }
+        }
+        
+        function memoryClear() {
+            memory = null;
+            updateStats();
+        }
+        
+        // 更新统计
+        function updateStats() {
+            document.getElementById('calcCount').textContent = calcCount;
+            document.getElementById('memoryValue').textContent = memory !== null ? memory : '-';
+        }
+        
+        // 返回首页
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+        
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
+            else if (e.key === '.') appendDecimal();
+            else if (e.key === '+') appendOperator('+');
+            else if (e.key === '-') appendOperator('-');
+            else if (e.key === '*') appendOperator('*');
+            else if (e.key === '/') { e.preventDefault(); appendOperator('/'); }
+            else if (e.key === 'Enter' || e.key === '=') calculate();
+            else if (e.key === 'Escape') clearAll();
+            else if (e.key === 'Backspace') {
+                if (currentValue.length > 1) {
+                    currentValue = currentValue.slice(0, -1);
+                } else {
+                    currentValue = '0';
+                }
+                updateDisplay();
+            }
+        });
+    </script>
+</body>
+</html>

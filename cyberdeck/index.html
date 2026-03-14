@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M7豆豆 CyberDeck</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+        }
+        
+        /* 扫描线效果 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 800px;
+            height: 480px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 800px;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+        
+        /* 顶部标题栏 */
+        .header {
+            height: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 0 10px;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+        }
+        
+        .header .neon-pink {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+        }
+        
+        /* 主内容区 */
+        .main-area {
+            flex: 1;
+            display: flex;
+            gap: 4px;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        /* 左侧主显示区 */
+        .main-panel {
+            width: 520px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            padding: 6px;
+            overflow: hidden;
+        }
+        
+        .panel-title {
+            font-size: 11px;
+            color: #00ffff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+            padding-bottom: 4px;
+        }
+        
+        /* 时钟面板 - 左上角 */
+        .clock-panel {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.05));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 15px;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        
+        .clock-time {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        
+        .clock-info {
+            font-size: 12px;
+            color: #ff00ff;
+            margin-top: 2px;
+            text-shadow: 0 0 5px #ff00ff;
+        }
+        
+        /* 欢迎信息 */
+        .welcome-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            padding-top: 5px;
+        }
+        
+        .welcome-title {
+            font-size: 18px;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+            margin-bottom: 5px;
+        }
+        
+        .welcome-subtitle {
+            font-size: 10px;
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+            margin-bottom: 5px;
+        }
+        
+        /* MG豆豆区域 - 左右均分布局 */
+        .dou-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 10px;
+            width: 100%;
+        }
+        
+        .dou-left {
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dou-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            object-fit: cover;
+        }
+        
+        .dou-name {
+            font-size: 16px;
+            color: #ff6b6b;
+            text-shadow: 0 0 10px #ff6b6b;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+        
+        .dou-version {
+            font-size: 9px;
+            color: #888;
+            margin-top: 3px;
+        }
+        
+        /* 团队区域 */
+        .team-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            background: rgba(10, 15, 35, 0.5);
+            border-radius: 8px;
+            margin: 6px 0;
+        }
+        
+        /* MG豆豆 Logo行 */
+        .dou-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 6px;
+        }
+        
+        .dou-logo-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.6);
+            object-fit: cover;
+        }
+        
+        .dou-text-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 3px;
+        }
+        
+        .dou-name-line {
+            font-size: 22px;
+            color: #ff6b6b;
+            text-shadow: 0 0 10px #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .dou-version-line {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        /* System Ready */
+        .system-ready-line {
+            font-size: 16px;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            text-align: center;
+            margin: 4px 0;
+        }
+        
+        /* MG Openclaw Team */
+        .openclaw-team-line {
+            font-size: 14px;
+            color: #00ff00;
+            text-shadow: 0 0 8px #00ff00;
+            font-weight: bold;
+            text-align: center;
+            margin: 4px 0 6px 0;
+        }
+        
+        .team-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .team-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #ff6b6b;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+            object-fit: cover;
+        }
+        
+        .team-title {
+            font-size: 14px;
+            color: #ff6b6b;
+            text-shadow: 0 0 10px #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            width: 100%;
+        }
+        
+        .team-member {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 6px 4px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: all 0.2s;
+        }
+        
+        .team-member:hover {
+            background: rgba(0, 255, 255, 0.15);
+            border-color: rgba(0, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .team-emoji {
+            font-size: 16px;
+        }
+        
+        .team-name {
+            font-size: 9px;
+            color: #00ffff;
+        }
+        
+        /* 服务器监控 - 紧凑版 */
+        .server-panel-compact {
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 6px 10px;
+            text-align: center;
+        }
+        
+        .server-title-compact {
+            font-size: 10px;
+            color: #00ffff;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .server-info-line {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            font-size: 11px;
+        }
+        
+        .server-panel-compact .server-ip {
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+            font-weight: bold;
+        }
+        
+        .server-panel-compact .server-status {
+            color: #00ff00;
+        }
+        
+        .server-panel-compact .server-location {
+            color: #888;
+        }
+        
+        .server-title-compact-blue {
+            font-size: 10px;
+            color: #00ffff;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        .server-label-blue {
+            color: #00ffff;
+            font-size: 10px;
+        }
+        
+        .server-value-green {
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 10px;
+        }
+        
+        /* 服务器监控面板 - 均分右侧 */
+        .server-panel {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(255, 0, 255, 0.03));
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 10px;
+        }
+        
+        .server-title {
+            font-size: 11px;
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 8px;
+            text-shadow: 0 0 5px #00ffff;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            padding-bottom: 4px;
+        }
+        
+        .server-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+        
+        .server-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            padding: 5px;
+        }
+        
+        .server-label {
+            color: #888;
+            font-size: 9px;
+            margin-bottom: 2px;
+        }
+        
+        .server-value {
+            color: #00ff00;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .server-value.warning {
+            color: #ffaa00;
+        }
+        
+        .server-value.danger {
+            color: #ff4444;
+        }
+        
+        .server-ip {
+            grid-column: span 2;
+            text-align: center;
+            background: linear-gradient(90deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+        
+        .server-ip .server-value {
+            color: #00ffff;
+            font-size: 12px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        /* 全屏按钮 */
+        .fullscreen-btn {
+            position: fixed;
+            top: 6px;
+            right: 150px;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.05));
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            border-radius: 4px;
+            color: #00ffff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            transition: all 0.2s;
+        }
+        
+        .fullscreen-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+        }
+        
+        /* 右侧导航面板 */
+        .nav-panel {
+            width: 256px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .panel {
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 8px;
+        }
+        
+        /* 可滚动的应用列表 */
+        .apps-container {
+            max-height: 280px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .apps-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .apps-container::-webkit-scrollbar-track {
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        
+        .apps-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+        
+        /* 应用卡片 */
+        .app-card {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(255, 0, 255, 0.05));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .app-card:hover, .app-card:active {
+            background: rgba(0, 255, 255, 0.15);
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            transform: translateX(2px);
+        }
+        
+        .app-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .app-info {
+            flex: 1;
+        }
+        
+        .app-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 2px;
+        }
+        
+        .app-desc {
+            font-size: 9px;
+            color: #888;
+        }
+        
+        .app-arrow {
+            font-size: 14px;
+            color: #00ffff;
+        }
+        
+        /* 状态面板 */
+        .status-section {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        
+        .status-item {
+            flex: 1;
+        }
+        
+        .status-value {
+            font-size: 20px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        
+        .status-label {
+            font-size: 9px;
+            color: #888;
+            margin-top: 2px;
+        }
+        
+        /* 底部滚动条 */
+        .footer {
+            height: 18px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            margin-top: 4px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .scrolling-text {
+            white-space: nowrap;
+            animation: scroll 10s linear infinite;
+            font-size: 9px;
+        }
+        
+        @keyframes scroll {
+            0% { transform: translateX(800px); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 全屏按钮 -->
+        <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="全屏">⛶</button>
+        
+        <!-- 顶部标题栏 -->
+        <header class="header">
+            <h1>MG<span class="neon-pink">豆豆</span> CYBERDECK</h1>
+            <div style="font-size: 12px; color: #00ff00;">● SYSTEM ONLINE</div>
+        </header>
+        
+        <!-- 主内容区 -->
+        <div class="main-area">
+            <!-- 左侧主显示区 -->
+            <div class="main-panel">
+                <!-- 时钟面板 -->
+                <div class="clock-panel">
+                    <div class="clock-time" id="clockTime">00:00:00</div>
+                    <div class="clock-info" id="clockInfo">2026年1月1日 星期一</div>
+                </div>
+                
+                <!-- MG豆豆 Logo + 信息 -->
+                <div class="team-section">
+                    <!-- Logo + 右边两行字 -->
+                    <div class="dou-logo-row">
+                        <img src="dou-avatar.png" alt="MG豆豆" class="dou-logo-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2270%22 height=%2270%22><circle cx=%2235%22 cy=%2235%22 r=%2233%22 fill=%22%23ff6b6b%22/><text x=%2235%22 y=%2245%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2230%22>🫘</text></svg>'">
+                        <div class="dou-text-right">
+                            <div class="dou-name-line">MG豆豆</div>
+                            <div class="dou-version-line">AI assistant V2.0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- System Ready -->
+                    <div class="system-ready-line">SYSTEM READY</div>
+                    
+                    <!-- MG Openclaw Team -->
+                    <div class="openclaw-team-line">MG Openclaw Team</div>
+                    
+                    <!-- 团队成员 -->
+                    <div class="team-grid" id="teamGrid">
+                        <div class="team-member">
+                            <span class="team-emoji">🎯</span>
+                            <span class="team-name">总指挥</span>
+                        </div>
+                        <div class="team-member">
+                            <span class="team-emoji">📋</span>
+                            <span class="team-name">参谋</span>
+                        </div>
+                        <div class="team-member">
+                            <span class="team-emoji">🤝</span>
+                            <span class="team-name">社区官</span>
+                        </div>
+                        <div class="team-member">
+                            <span class="team-emoji">✍️</span>
+                            <span class="team-name">笔杆子</span>
+                        </div>
+                        <div class="team-member">
+                            <span class="team-emoji">🔍</span>
+                            <span class="team-name">净化官</span>
+                        </div>
+                        <div class="team-member">
+                            <span class="team-emoji">⚙️</span>
+                            <span class="team-name">运营官</span>
+                        </div>
+                        <div class="team-member">
+                            <span class="team-emoji">🔬</span>
+                            <span class="team-name">研究员</span>
+                        </div>
+                        <div class="team-member">
+                            <span class="team-emoji">💱</span>
+                            <span class="team-name">交易官</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 服务器监控 -->
+                <div class="server-panel-compact">
+                    <div class="server-title-compact-blue">SERVER STATUS</div>
+                    <div class="server-info-row">
+                        <span class="server-item"><span class="server-label-blue">公网IP:</span> <span class="server-value-green">39.108.85.41</span></span>
+                        <span class="server-item"><span class="server-label-blue">状态:</span> <span class="server-value-green">● 运行中</span></span>
+                        <span class="server-item"><span class="server-label-blue">地域:</span> <span class="server-value-green">深圳</span></span>
+                    </div>
+                    <div class="server-info-row">
+                        <span class="server-item"><span class="server-label-blue">CPU:</span> <span class="server-value-green">2核</span></span>
+                        <span class="server-item"><span class="server-label-blue">内存:</span> <span class="server-value-green">2GB</span></span>
+                        <span class="server-item"><span class="server-label-blue">存储:</span> <span class="server-value-green">40GB</span></span>
+                        <span class="server-item"><span class="server-label-blue">带宽:</span> <span class="server-value-green">200Mbps</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧导航面板 -->
+            <div class="nav-panel">
+                <!-- 应用列表 -->
+                <div class="panel">
+                    <div class="panel-title">APPLICATIONS</div>
+                    <div class="apps-container" id="appsContainer">
+                        <!-- CyberDeck Terminal -->
+                        <div class="app-card" onclick="openApp('index.html')">
+                            <div class="app-icon">💬</div>
+                            <div class="app-info">
+                                <div class="app-name">CyberDeck Terminal</div>
+                                <div class="app-desc">Main conversation interface</div>
+                            </div>
+                            <div class="app-arrow">▶</div>
+                        </div>
+                        
+                        <!-- Snake Game -->
+                        <div class="app-card" onclick="openApp('snake.html')">
+                            <div class="app-icon">🐍</div>
+                            <div class="app-info">
+                                <div class="app-name">CyberSnake</div>
+                                <div class="app-desc">Classic snake game with touch controls</div>
+                            </div>
+                            <div class="app-arrow">▶</div>
+                        </div>
+                        
+                        <!-- Pomodoro Timer -->
+                        <div class="app-card" onclick="openApp('pomodoro.html')">
+                            <div class="app-icon">🍅</div>
+                            <div class="app-info">
+                                <div class="app-name">CyberPomodoro</div>
+                                <div class="app-desc">Focus timer with circular touch dial</div>
+                            </div>
+                            <div class="app-arrow">▶</div>
+                        </div>
+                        
+                        <!-- CyberGarden -->
+                        <div class="app-card" onclick="openApp('garden.html')">
+                            <div class="app-icon">🌱</div>
+                            <div class="app-info">
+                                <div class="app-name">CyberGarden</div>
+                                <div class="app-desc">Idea bank - plant seeds, watch them grow</div>
+                            </div>
+                            <div class="app-arrow">▶</div>
+                        </div>
+                        
+                        <!-- Flashcards -->
+                        <div class="app-card" onclick="openApp('flashcards.html')">
+                            <div class="app-icon">🎴</div>
+                            <div class="app-info">
+                                <div class="app-name">CyberFlashcards</div>
+                                <div class="app-desc">English word learning with flashcards</div>
+                            </div>
+                            <div class="app-arrow">▶</div>
+                        </div>
+                        
+                        <!-- Todo List -->
+                        <div class="app-card" onclick="openApp('todo.html')">
+                            <div class="app-icon">📋</div>
+                            <div class="app-info">
+                                <div class="app-name">CyberTodo</div>
+                                <div class="app-desc">Task management with priorities</div>
+                            </div>
+                            <div class="app-arrow">▶</div>
+                        </div>
+                        
+                        <!-- Calculator -->
+                        <div class="app-card" onclick="openApp('calculator.html')">
+                            <div class="app-icon">🔢</div>
+                            <div class="app-info">
+                                <div class="app-name">CyberCalc</div>
+                                <div class="app-desc">Scientific calculator with history</div>
+                            </div>
+                            <div class="app-arrow">▶</div>
+                        </div>
+                        
+                        <!-- Placeholder for future apps -->
+                        <div class="app-card" style="opacity: 0.5; border-style: dashed;">
+                            <div class="app-icon">➕</div>
+                            <div class="app-info">
+                                <div class="app-name">More Apps</div>
+                                <div class="app-desc">Coming soon...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 系统状态 -->
+                <div class="panel">
+                    <div class="panel-title">SYSTEM STATUS</div>
+                    <div class="status-section">
+                        <div class="status-item">
+                            <div class="status-value" id="sysClock">--:--</div>
+                            <div class="status-label">TIME</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-value">7</div>
+                            <div class="status-label">APPS</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-value" style="color: #00ff00;">●</div>
+                            <div class="status-label">ONLINE</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部滚动条 -->
+        <div class="footer">
+            <div class="scrolling-text">
+                <span style="color: #00ffff;">SYSTEM READY</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #ff00ff;">MG豆豆 v2026.3.13</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #00ff00;">7 APPS LOADED</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #00ffff;">TOUCH ENABLED</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+                <span style="color: #ff00ff;">MG豆豆 ONLINE</span>
+                <span style="color: #555; margin: 0 10px;">|</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 星期映射
+        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        
+        // 更新时钟（北京时间 UTC+8）
+        function updateClock() {
+            // 获取北京时间
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const beijingTime = new Date(utc + (3600000 * 8));
+            
+            // 左上角大时钟
+            const hours = String(beijingTime.getHours()).padStart(2, '0');
+            const minutes = String(beijingTime.getMinutes()).padStart(2, '0');
+            const seconds = String(beijingTime.getSeconds()).padStart(2, '0');
+            document.getElementById('clockTime').textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // 日期和星期合并显示
+            const year = beijingTime.getFullYear();
+            const month = beijingTime.getMonth() + 1;
+            const date = beijingTime.getDate();
+            const weekday = weekdays[beijingTime.getDay()];
+            document.getElementById('clockInfo').textContent = `${year}年${month}月${date}日 ${weekday}`;
+            
+            // 右下角系统状态时间（简化版 HH:MM）
+            document.getElementById('sysClock').textContent = `${hours}:${minutes}`;
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        // 打开应用
+        function openApp(url) {
+            window.location.href = url;
+        }
+        
+        // 全屏切换
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                // 进入全屏
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                // 退出全屏
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        // 更新全屏按钮图标
+        function updateFullscreenButton() {
+            const btn = document.getElementById('fullscreenBtn');
+            if (document.fullscreenElement) {
+                btn.textContent = '⛶'; // 退出全屏图标
+                btn.title = '退出全屏';
+            } else {
+                btn.textContent = '⛶'; // 全屏图标
+                btn.title = '全屏';
+            }
+        }
+        
+        // 监听全屏变化
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+    </script>
+</body>
+</html>
