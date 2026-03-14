@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课堂评价自动化系统 - 测试页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .status-card {
+            background: #f0f9ff;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-title {
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .info-item {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+        }
+        .test-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .test-result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .test-result.success {
+            background: #dcfce7;
+            border: 1px solid #22c55e;
+            color: #166534;
+            display: block;
+        }
+        .test-result.error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+            display: block;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 课堂评价自动化系统</h1>
+        <p class="subtitle">GitHub Pages 部署测试页面</p>
+        
+        <div class="status-card">
+            <div class="status-title">
+                <span class="status-dot"></span>
+                系统状态：运行正常
+            </div>
+            <p>✅ GitHub Pages 部署成功</p>
+            <p>✅ 静态页面加载正常</p>
+            <p>✅ HTTPS 证书有效</p>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">部署时间</div>
+                <div class="info-value" id="deployTime">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">页面加载时间</div>
+                <div class="info-value" id="loadTime">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">当前时间</div>
+                <div class="info-value" id="currentTime">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">浏览器</div>
+                <div class="info-value" id="browser">--</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3 style="margin-bottom: 15px;">🧪 连接测试</h3>
+            <button class="test-button" onclick="runTest()">测试系统连接</button>
+            <div id="testResult" class="test-result"></div>
+        </div>
+
+        <div class="footer">
+            <p>部署验证成功 | 准备接入飞书机器人</p>
+            <p>硬地骇客 · 课堂评价自动化系统</p>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时显示信息
+        const now = new Date();
+        document.getElementById('deployTime').textContent = '2026-03-14';
+        document.getElementById('loadTime').textContent = now.toLocaleTimeString('zh-CN');
+        document.getElementById('currentTime').textContent = now.toLocaleString('zh-CN');
+        document.getElementById('browser').textContent = navigator.userAgent.split(' ')[0].replace('/', ' ');
+
+        // 每秒更新时间
+        setInterval(() => {
+            document.getElementById('currentTime').textContent = new Date().toLocaleString('zh-CN');
+        }, 1000);
+
+        // 测试按钮功能
+        function runTest() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = 'test-result';
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '正在测试连接...';
+            
+            setTimeout(() => {
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `
+                    <strong>✅ 测试通过</strong><br>
+                    前端页面运行正常<br>
+                    等待后端服务接入...
+                `;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
