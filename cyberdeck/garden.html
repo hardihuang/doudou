@@ -439,6 +439,7 @@
             background: rgba(0, 255, 255, 0.2);
         }
     </style>
+<script src="audio.js"></script>
 </head>
 <body>
     <div class="container">
@@ -763,6 +764,7 @@
                 incubationStatus: 'none'
             });
             
+            if (typeof AudioSynth !== 'undefined') AudioSynth.success();
             saveSeeds();
             document.getElementById('ideaInput').value = '';
             updateStats();

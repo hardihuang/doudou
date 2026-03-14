@@ -615,6 +615,7 @@
         
         function flipCard() {
             document.getElementById('flashcard').classList.toggle('flipped');
+            if (typeof AudioSynth !== 'undefined') AudioSynth.flip();
         }
         
         function speakWord(event) {
