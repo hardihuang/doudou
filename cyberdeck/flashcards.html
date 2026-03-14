@@ -479,34 +479,72 @@
         </header>
         
         <!-- 主内容区 -->
-        <div class="main-content">
-            <div class="question-prompt">选择你认识的单词</div>
-            
-            <div class="flashcard-container">
-                <div class="flashcard" id="flashcard" onclick="flipCard()">
-                    <div class="flashcard-face flashcard-front">
-                        <button class="speak-btn" onclick="speakWord(event)" title="发音">🔊</button>
-                        <div class="word-text" id="wordText">absent</div>
-                        <div class="word-phonetic" id="wordPhonetic">/ˈæbsənt/</div>
-                        <div class="flip-hint">点击翻转 ▶</div>
+        <div class="main-content" style="display: flex; flex-direction: row; gap: 15px; padding: 10px;">
+            <!-- 左侧：卡片区域 -->
+            <div class="left-panel" style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                <div class="question-prompt">选择你认识的单词</div>
+                
+                <div class="flashcard-container">
+                    <div class="flashcard" id="flashcard" onclick="flipCard()">
+                        <div class="flashcard-face flashcard-front">
+                            <button class="speak-btn" onclick="speakWord(event)" title="发音">🔊</button>
+                            <div class="word-text" id="wordText">absent</div>
+                            <div class="word-phonetic" id="wordPhonetic">/ˈæbsənt/</div>
+                            <div class="flip-hint">点击翻转 ▶</div>
+                        </div>
+                        <div class="flashcard-face flashcard-back">
+                            <div class="word-meaning" id="wordMeaning">缺席的，不在的</div>
+                            <div class="word-example" id="wordExample">"He was absent from school."</div>
+                            <div class="flip-hint">◀ 点击翻回</div>
+                        </div>
                     </div>
-                    <div class="flashcard-face flashcard-back">
-                        <div class="word-meaning" id="wordMeaning">缺席的，不在的</div>
-                        <div class="word-example" id="wordExample">"He was absent from school."</div>
-                        <div class="flip-hint">◀ 点击翻回</div>
-                    </div>
+                </div>
+                
+                <div class="controls-area">
+                    <button class="control-btn wrong" onclick="markWrong()">
+                        <span class="btn-icon">✗</span>
+                        <span>不认识</span>
+                    </button>
+                    <button class="control-btn correct" onclick="markCorrect()">
+                        <span class="btn-icon">✓</span>
+                        <span>认识</span>
+                    </button>
                 </div>
             </div>
             
-            <div class="controls-area">
-                <button class="control-btn wrong" onclick="markWrong()">
-                    <span class="btn-icon">✗</span>
-                    <span>不认识</span>
-                </button>
-                <button class="control-btn correct" onclick="markCorrect()">
-                    <span class="btn-icon">✓</span>
-                    <span>认识</span>
-                </button>
+            <!-- 右侧：学习统计面板 -->
+            <div class="stats-panel" style="width: 200px; background: rgba(10, 15, 35, 0.95); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 15px;">
+                <div class="stats-title" style="font-size: 14px; color: #00ffff; text-align: center; border-bottom: 1px solid rgba(0, 255, 255, 0.3); padding-bottom: 10px;">学习统计</div>
+                
+                <div class="stat-box" style="background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 10px;">
+                    <div class="stat-label" style="font-size: 10px; color: #888; margin-bottom: 5px;">进度</div>
+                    <div class="stat-bar" style="height: 8px; background: rgba(0, 255, 255, 0.2); border-radius: 4px; overflow: hidden;">
+                        <div id="progressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #00ffff, #ff00ff); transition: width 0.3s;"></div>
+                    </div>
+                    <div id="progressText" style="font-size: 11px; color: #00ffff; text-align: right; margin-top: 5px;">0%</div>
+                </div>
+                
+                <div class="stat-box" style="background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 10px;">
+                    <div class="stat-label" style="font-size: 10px; color: #888; margin-bottom: 5px;">掌握情况</div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-size: 11px; color: #00ff00;">✓ 认识</span>
+                        <span id="masteredCount" style="font-size: 11px; color: #00ff00;">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 11px; color: #ff4444;">✗ 不熟</span>
+                        <span id="unmasteredCount" style="font-size: 11px; color: #ff4444;">0</span>
+                    </div>
+                </div>
+                
+                <div class="stat-box" style="background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 10px;">
+                    <div class="stat-label" style="font-size: 10px; color: #888; margin-bottom: 5px;">得分</div>
+                    <div id="scoreDisplay" style="font-size: 24px; color: #00ffff; text-align: center; font-weight: bold; text-shadow: 0 0 10px #00ffff;">0</div>
+                </div>
+                
+                <div class="stat-box" style="background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 10px;">
+                    <div class="stat-label" style="font-size: 10px; color: #888; margin-bottom: 5px;">连击</div>
+                    <div id="streakDisplay" style="font-size: 18px; color: #ff00ff; text-align: center; font-weight: bold;">🔥 x0</div>
+                </div>
             </div>
         </div>
         
@@ -632,6 +670,7 @@
         }
         
         function markCorrect() {
+            if (typeof AudioSynth !== 'undefined') AudioSynth.success();
             wordStatus[currentIndex] = 'correct';
             correctCount++;
             streak++;
@@ -654,6 +693,7 @@
         }
         
         function markWrong() {
+            if (typeof AudioSynth !== 'undefined') AudioSynth.fail();
             wordStatus[currentIndex] = 'wrong';
             wrongCount++;
             streak = 0;
@@ -694,6 +734,16 @@
             document.getElementById('scoreTop').textContent = score;
             document.getElementById('correctStat').textContent = correctCount;
             document.getElementById('wrongStat').textContent = wrongCount;
+            
+            // 更新右侧统计面板
+            const progress = words.length > 0 ? ((currentIndex + 1) / words.length) * 100 : 0;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = Math.round(progress) + '%';
+            
+            document.getElementById('masteredCount').textContent = correctCount;
+            document.getElementById('unmasteredCount').textContent = wrongCount;
+            document.getElementById('scoreDisplay').textContent = score;
+            document.getElementById('streakDisplay').textContent = '🔥 x' + streak;
         }
         
         function showCompletion() {
