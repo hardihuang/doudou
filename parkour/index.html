@@ -283,8 +283,9 @@
         
         // 生成障碍物
         function spawnObstacle() {
-            if (Math.random() < 0.015) {
-                const type = Math.random() < 0.5 ? 'spike' : 'rock';
+            if (Math.random() < 0.012) {
+                // 70%岩石，30%尖刺（减少尖刺）
+                const type = Math.random() < 0.3 ? 'spike' : 'rock';
                 obstacles.push({
                     x: canvas.width,
                     y: type === 'spike' ? ground.y - 30 : ground.y - 40,
@@ -341,7 +342,17 @@
                     player.x + player.width > obs.x &&
                     player.y < obs.y + obs.height &&
                     player.y + player.height > obs.y) {
-                    gameOver();
+                    
+                    if (obs.type === 'rock') {
+                        // 灰色岩石：推开玩家
+                        player.x -= 5; // 向左推
+                        if (player.x <= 0) {
+                            gameOver(); // 推到边缘才死
+                        }
+                    } else {
+                        // 红色尖刺：直接死
+                        gameOver();
+                    }
                 }
             });
         }
