@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CyberBeat // OpenClaw</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        html, body {
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+        }
+        
+        /* 扫描线效果 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 800px;
+            height: 480px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 800px;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            padding: 6px;
+        }
+        
+        /* 顶部标题栏 */
+        .header {
+            height: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 0 10px;
+            margin-bottom: 6px;
+        }
+        
+        .header h1 {
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+        }
+        
+        .header .neon-pink {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+        }
+        
+        .back-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #00ffff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .bpm-display {
+            font-size: 14px;
+            color: #ff00ff;
+        }
+        
+        .control-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #00ffff;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .control-btn.active {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+        
+        /* 主区域 */
+        .main-area {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+        }
+        
+        /* 左侧鼓垫区域 */
+        .pads-area {
+            width: 320px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .drum-pad {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.05s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .drum-pad::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.8), transparent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s;
+        }
+        
+        .drum-pad.triggered::before {
+            width: 100px;
+            height: 100px;
+        }
+        
+        .drum-pad.triggered {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            transform: scale(0.95);
+        }
+        
+        .pad-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .pad-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+        }
+        
+        .pad-key {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 10px;
+            color: #444;
+        }
+        
+        /* 右侧音序器 */
+        .sequencer-area {
+            flex: 1;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sequencer-title {
+            font-size: 12px;
+            color: #ff00ff;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .sequencer-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 40px repeat(16, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 2px;
+        }
+        
+        .track-label {
+            display: flex;
+            align-items: center;
+            font-size: 10px;
+            color: #888;
+            padding-right: 5px;
+        }
+        
+        .step {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        
+        .step.active {
+            background: rgba(0, 255, 255, 0.5);
+            border-color: #00ffff;
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+        
+        .step.current {
+            border-color: #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+        
+        .step.active.current {
+            background: #ff00ff;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+        }
+        
+        /* 步数标记 */
+        .step-numbers {
+            display: grid;
+            grid-template-columns: 40px repeat(16, 1fr);
+            gap: 2px;
+            margin-top: 5px;
+        }
+        
+        .step-number {
+            text-align: center;
+            font-size: 8px;
+            color: #444;
+        }
+        
+        .step-number.beat {
+            color: #00ffff;
+        }
+        
+        /* 底部控制 */
+        .bottom-controls {
+            height: 40px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 6px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        .bpm-slider {
+            width: 150px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        .bpm-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #00ffff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        /* 手柄状态 */
+        .gamepad-status {
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            font-size: 10px;
+            color: #888;
+        }
+        
+        .gamepad-status.connected {
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题栏 -->
+        <header class="header">
+            <button class="back-btn" onclick="goBack()">◀ 首页</button>
+            <h1>CYBER<span class="neon-pink">BEAT</span></h1>
+            <div class="header-controls">
+                <span class="bpm-display">BPM: <span id="bpmValue">120</span></span>
+                <button class="control-btn" id="playBtn" onclick="togglePlay()">▶ 播放</button>
+                <button class="control-btn" onclick="clearPattern()">清空</button>
+            </div>
+        </header>
+        
+        <!-- 主区域 -->
+        <div class="main-area">
+            <!-- 鼓垫区域 -->
+            <div class="pads-area">
+                <div class="drum-pad" data-sound="kick" onclick="triggerPad(0)">
+                    <span class="pad-key">1</span>
+                    <span class="pad-icon">🥁</span>
+                    <span class="pad-label">KICK</span>
+                </div>
+                <div class="drum-pad" data-sound="snare" onclick="triggerPad(1)">
+                    <span class="pad-key">2</span>
+                    <span class="pad-icon">🎯</span>
+                    <span class="pad-label">SNARE</span>
+                </div>
+                <div class="drum-pad" data-sound="hihat" onclick="triggerPad(2)">
+                    <span class="pad-key">3</span>
+                    <span class="pad-icon">🔔</span>
+                    <span class="pad-label">HIHAT</span>
+                </div>
+                <div class="drum-pad" data-sound="openhat" onclick="triggerPad(3)">
+                    <span class="pad-key">4</span>
+                    <span class="pad-icon">📢</span>
+                    <span class="pad-label">OPEN</span>
+                </div>
+                <div class="drum-pad" data-sound="tom" onclick="triggerPad(4)">
+                    <span class="pad-key">5</span>
+                    <span class="pad-icon">🎵</span>
+                    <span class="pad-label">TOM</span>
+                </div>
+                <div class="drum-pad" data-sound="bass" onclick="triggerPad(5)">
+                    <span class="pad-key">6</span>
+                    <span class="pad-icon">🎸</span>
+                    <span class="pad-label">BASS</span>
+                </div>
+                <div class="drum-pad" data-sound="clap" onclick="triggerPad(6)">
+                    <span class="pad-key">7</span>
+                    <span class="pad-icon">👏</span>
+                    <span class="pad-label">CLAP</span>
+                </div>
+                <div class="drum-pad" data-sound="fx" onclick="triggerPad(7)">
+                    <span class="pad-key">8</span>
+                    <span class="pad-icon">✨</span>
+                    <span class="pad-label">FX</span>
+                </div>
+            </div>
+            
+            <!-- 音序器区域 -->
+            <div class="sequencer-area">
+                <div class="sequencer-title">16-STEP SEQUENCER</div>
+                <div class="sequencer-grid" id="sequencerGrid">
+                    <!-- 动态生成 -->
+                </div>
+                <div class="step-numbers">
+                    <div></div>
+                    <div class="step-number">1</div>
+                    <div class="step-number">2</div>
+                    <div class="step-number">3</div>
+                    <div class="step-number">4</div>
+                    <div class="step-number beat">5</div>
+                    <div class="step-number">6</div>
+                    <div class="step-number">7</div>
+                    <div class="step-number">8</div>
+                    <div class="step-number beat">9</div>
+                    <div class="step-number">10</div>
+                    <div class="step-number">11</div>
+                    <div class="step-number">12</div>
+                    <div class="step-number beat">13</div>
+                    <div class="step-number">14</div>
+                    <div class="step-number">15</div>
+                    <div class="step-number">16</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部控制 -->
+        <div class="bottom-controls">
+            <span style="font-size: 12px; color: #888;">BPM:</span>
+            <input type="range" class="bpm-slider" id="bpmSlider" min="60" max="180" value="120" onchange="updateBPM(this.value)">
+            <span style="font-size: 10px; color: #666;">60-180</span>
+        </div>
+    </div>
+    
+    <div class="gamepad-status" id="gamepadStatus">🎮 等待手柄...</div>
+    
+    <script>
+        // 音频上下文
+        let audioCtx = null;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        // 鼓声合成
+        const drumSounds = {
+            kick: () => {
+                if (!audioCtx) initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.5);
+            },
+            snare: () => {
+                if (!audioCtx) initAudio();
+                // 噪声
+                const bufferSize = audioCtx.sampleRate * 0.2;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.value = 1000;
+                const noiseGain = audioCtx.createGain();
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noiseGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                noise.start();
+                
+                // 正弦波
+                const osc = audioCtx.createOscillator();
+                const oscGain = audioCtx.createGain();
+                osc.connect(oscGain);
+                oscGain.connect(audioCtx.destination);
+                osc.frequency.value = 200;
+                oscGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                oscGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            },
+            hihat: () => {
+                if (!audioCtx) initAudio();
+                const bufferSize = audioCtx.sampleRate * 0.05;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 8000;
+                const gain = audioCtx.createGain();
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                noise.start();
+            },
+            openhat: () => {
+                if (!audioCtx) initAudio();
+                const bufferSize = audioCtx.sampleRate * 0.3;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 6000;
+                const gain = audioCtx.createGain();
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                noise.start();
+            },
+            tom: () => {
+                if (!audioCtx) initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            },
+            bass: () => {
+                if (!audioCtx) initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            },
+            clap: () => {
+                if (!audioCtx) initAudio();
+                const now = audioCtx.currentTime;
+                for (let i = 0; i < 3; i++) {
+                    const bufferSize = audioCtx.sampleRate * 0.1;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let j = 0; j < bufferSize; j++) {
+                        data[j] = Math.random() * 2 - 1;
+                    }
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.value = 1500;
+                    const gain = audioCtx.createGain();
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.3, now + i * 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.02 + 0.1);
+                    noise.start(now + i * 0.02);
+                }
+            },
+            fx: () => {
+                if (!audioCtx) initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        };
+        
+        // 音序器状态
+        const NUM_TRACKS = 8;
+        const NUM_STEPS = 16;
+        let pattern = Array(NUM_TRACKS).fill(null).map(() => Array(NUM_STEPS).fill(false));
+        let currentStep = 0;
+        let isPlaying = false;
+        let bpm = 120;
+        let nextNoteTime = 0;
+        let timerId = null;
+        
+        const trackNames = ['KICK', 'SNARE', 'HIHAT', 'OPEN', 'TOM', 'BASS', 'CLAP', 'FX'];
+        const soundKeys = ['kick', 'snare', 'hihat', 'openhat', 'tom', 'bass', 'clap', 'fx'];
+        
+        // 初始化音序器网格
+        function initSequencer() {
+            const grid = document.getElementById('sequencerGrid');
+            grid.innerHTML = '';
+            
+            for (let track = 0; track < NUM_TRACKS; track++) {
+                // 轨道标签
+                const label = document.createElement('div');
+                label.className = 'track-label';
+                label.textContent = trackNames[track];
+                grid.appendChild(label);
+                
+                // 16个步进
+                for (let step = 0; step < NUM_STEPS; step++) {
+                    const stepDiv = document.createElement('div');
+                    stepDiv.className = 'step';
+                    stepDiv.dataset.track = track;
+                    stepDiv.dataset.step = step;
+                    stepDiv.onclick = () => toggleStep(track, step);
+                    grid.appendChild(stepDiv);
+                }
+            }
+        }
+        
+        // 切换步进状态
+        function toggleStep(track, step) {
+            pattern[track][step] = !pattern[track][step];
+            updateGrid();
+        }
+        
+        // 更新网格显示
+        function updateGrid() {
+            const steps = document.querySelectorAll('.step');
+            steps.forEach(step => {
+                const track = parseInt(step.dataset.track);
+                const s = parseInt(step.dataset.step);
+                step.classList.toggle('active', pattern[track][s]);
+                step.classList.toggle('current', s === currentStep);
+            });
+        }
+        
+        // 触发鼓垫
+        function triggerPad(index) {
+            initAudio();
+            const soundKey = soundKeys[index];
+            if (drumSounds[soundKey]) {
+                drumSounds[soundKey]();
+            }
+            
+            // 视觉反馈
+            const pads = document.querySelectorAll('.drum-pad');
+            pads[index].classList.add('triggered');
+            setTimeout(() => pads[index].classList.remove('triggered'), 100);
+        }
+        
+        // 播放/暂停
+        function togglePlay() {
+            initAudio();
+            const btn = document.getElementById('playBtn');
+            
+            if (isPlaying) {
+                isPlaying = false;
+                btn.textContent = '▶ 播放';
+                btn.classList.remove('active');
+                if (timerId) clearTimeout(timerId);
+            } else {
+                isPlaying = true;
+                btn.textContent = '⏹ 停止';
+                btn.classList.add('active');
+                currentStep = 0;
+                nextNoteTime = audioCtx.currentTime;
+                scheduler();
+            }
+        }
+        
+        // 音频调度器
+        function scheduler() {
+            if (!isPlaying) return;
+            
+            const secondsPerBeat = 60.0 / bpm;
+            const secondsPerStep = secondsPerBeat / 4;
+            
+            while (nextNoteTime < audioCtx.currentTime + 0.1) {
+                // 播放当前步
+                for (let track = 0; track < NUM_TRACKS; track++) {
+                    if (pattern[track][currentStep]) {
+                        const soundKey = soundKeys[track];
+                        if (drumSounds[soundKey]) {
+                            // 使用 setTimeout 来同步视觉更新
+                            setTimeout(() => {
+                                drumSounds[soundKey]();
+                                triggerPadVisual(track);
+                            }, (nextNoteTime - audioCtx.currentTime) * 1000);
+                        }
+                    }
+                }
+                
+                // 更新视觉
+                setTimeout(() => updateGrid(), (nextNoteTime - audioCtx.currentTime) * 1000);
+                
+                // 下一步
+                nextNoteTime += secondsPerStep;
+                currentStep = (currentStep + 1) % NUM_STEPS;
+            }
+            
+            timerId = setTimeout(scheduler, 25);
+        }
+        
+        // 触发鼓垫视觉
+        function triggerPadVisual(track) {
+            const pads = document.querySelectorAll('.drum-pad');
+            pads[track].classList.add('triggered');
+            setTimeout(() => pads[track].classList.remove('triggered'), 100);
+        }
+        
+        // 更新BPM
+        function updateBPM(value) {
+            bpm = parseInt(value);
+            document.getElementById('bpmValue').textContent = bpm;
+        }
+        
+        // 清空模式
+        function clearPattern() {
+            pattern = Array(NUM_TRACKS).fill(null).map(() => Array(NUM_STEPS).fill(false));
+            updateGrid();
+        }
+        
+        // 返回首页
+        function goBack() {
+            if (isPlaying) togglePlay();
+            window.location.href = 'index.html';
+        }
+        
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '1' && e.key <= '8') {
+                triggerPad(parseInt(e.key) - 1);
+            } else if (e.code === 'Space') {
+                e.preventDefault();
+                togglePlay();
+            }
+        });
+        
+        // 手柄控制
+        let gamepadIndex = null;
+        
+        window.addEventListener('gamepadconnected', (e) => {
+            gamepadIndex = e.gamepad.index;
+            document.getElementById('gamepadStatus').textContent = '🎮 手柄已连接';
+            document.getElementById('gamepadStatus').classList.add('connected');
+        });
+        
+        window.addEventListener('gamepaddisconnected', () => {
+            gamepadIndex = null;
+            document.getElementById('gamepadStatus').textContent = '🎮 等待手柄...';
+            document.getElementById('gamepadStatus').classList.remove('connected');
+        });
+        
+        // 手柄轮询
+        let lastButtonState = false;
+        let selectedPad = 0;
+        
+        function pollGamepad() {
+            if (gamepadIndex !== null) {
+                const gamepad = navigator.getGamepads()[gamepadIndex];
+                if (gamepad) {
+                    // 方向键选择鼓垫
+                    if (gamepad.buttons[12].pressed && selectedPad > 3) selectedPad -= 4; // 上
+                    if (gamepad.buttons[13].pressed && selectedPad < 4) selectedPad += 4; // 下
+                    if (gamepad.buttons[14].pressed && selectedPad > 0) selectedPad--; // 左
+                    if (gamepad.buttons[15].pressed && selectedPad < 7) selectedPad++; // 右
+                    
+                    // A键触发
+                    const isPressed = gamepad.buttons[0].pressed;
+                    if (isPressed && !lastButtonState) {
+                        triggerPad(selectedPad);
+                    }
+                    lastButtonState = isPressed;
+                    
+                    // 高亮选中的鼓垫
+                    document.querySelectorAll('.drum-pad').forEach((pad, i) => {
+                        pad.style.borderColor = i === selectedPad ? '#ff00ff' : '';
+                    });
+                }
+            }
+            requestAnimationFrame(pollGamepad);
+        }
+        
+        pollGamepad();
+        
+        // 初始化
+        initSequencer();
+    </script>
+</body>
+</html>
