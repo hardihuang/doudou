@@ -3,287 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARTICLES.DB // DOUDOU.SYS</title>
-    <meta name="description" content="Technical articles database - AI, Automation, EdTech">
+    <title>文章 - 豆豆</title>
+    <meta name="description" content="豆豆的技术文章：AI、自动化、教育科技、开发实践">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫘</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="cyberdeck-style.css">
     <style>
-        .sys-info {
-            margin-bottom: 24px;
-        }
-
-        .filter-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 8px 16px;
-            background: transparent;
-            border: 1px solid var(--border-cyan);
-            color: var(--text-gray);
-            font-family: var(--font-mono);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-        }
-
-        .filter-btn:hover,
-        .filter-btn.active {
-            background: rgba(0, 255, 255, 0.1);
-            border-color: var(--text-cyan);
-            color: var(--text-cyan);
-            box-shadow: var(--glow-cyan);
-        }
-
-        .article-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .article-item {
-            background: var(--bg-panel);
-            border: 1px solid var(--border-cyan);
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .article-item:hover {
-            border-color: var(--text-cyan);
-            box-shadow: var(--glow-cyan);
-            transform: translateX(5px);
-        }
-
-        .article-meta {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-        }
-
-        .article-tag {
-            font-size: 11px;
-            padding: 2px 8px;
-            border: 1px solid var(--border-pink);
-            color: var(--text-pink);
-        }
-
-        .article-date {
-            font-size: 11px;
-            color: var(--text-gray);
-        }
-
-        .article-item h3 {
-            font-size: 15px;
-            margin-bottom: 8px;
-        }
-
-        .article-item p {
-            font-size: 12px;
-            color: var(--text-gray);
-            line-height: 1.5;
-        }
-
-        .article-stats {
-            display: flex;
-            gap: 16px;
-            margin-top: 12px;
-            font-size: 11px;
-            color: var(--text-gray);
-        }
-
-        .featured {
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
-            border: 1px solid var(--text-cyan);
-            padding: 24px;
-            margin-bottom: 24px;
-            position: relative;
-        }
-
-        .featured::before {
-            content: '◈ FEATURED';
-            position: absolute;
-            top: -10px;
-            left: 20px;
-            background: var(--bg-primary);
-            padding: 0 10px;
-            font-size: 11px;
-            color: var(--text-cyan);
-            border: 1px solid var(--text-cyan);
-        }
-
-        .featured h2 {
-            font-size: 20px;
-            margin: 8px 0 12px;
-        }
-
-        .featured p {
-            font-size: 13px;
-            color: var(--text-gray);
-            line-height: 1.6;
-            margin-bottom: 16px;
-        }
+        .sys-info { margin-bottom: 24px; }
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 16px; background: transparent; border: 1px solid var(--border-cyan); color: var(--text-gray); font-family: var(--font-mono); font-size: 12px; cursor: pointer; transition: all 0.3s; }
+        .filter-btn:hover, .filter-btn.active { background: rgba(0, 255, 255, 0.1); border-color: var(--text-cyan); color: var(--text-cyan); box-shadow: var(--glow-cyan); }
+        .article-list { display: flex; flex-direction: column; gap: 12px; }
+        .article-item { background: var(--bg-panel); border: 1px solid var(--border-cyan); padding: 20px; cursor: pointer; transition: all 0.3s; }
+        .article-item:hover { border-color: var(--text-cyan); box-shadow: var(--glow-cyan); transform: translateX(5px); }
+        .article-meta { display: flex; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+        .article-tag { font-size: 11px; padding: 2px 8px; border: 1px solid var(--border-pink); color: var(--text-pink); }
+        .article-date { font-size: 11px; color: var(--text-gray); }
+        .article-item h3 { font-size: 15px; margin-bottom: 8px; }
+        .article-item p { font-size: 12px; color: var(--text-gray); line-height: 1.5; }
+        .article-stats { display: flex; gap: 16px; margin-top: 12px; font-size: 11px; color: var(--text-gray); }
+        .featured { background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1)); border: 1px solid var(--text-cyan); padding: 24px; margin-bottom: 24px; position: relative; }
+        .featured::before { content: '◈ 精选'; position: absolute; top: -10px; left: 20px; background: var(--bg-primary); padding: 0 10px; font-size: 11px; color: var(--text-cyan); border: 1px solid var(--text-cyan); }
+        .featured h2 { font-size: 20px; margin: 8px 0 12px; }
+        .featured p { font-size: 13px; color: var(--text-gray); line-height: 1.6; margin-bottom: 16px; }
     </style>
 </head>
 <body class="cyber-grid">
     <nav class="nav">
+        <a href="index.html" class="logo">豆豆系统</a>
         <div class="nav-toggle" onclick="toggleNav()">
             <span></span>
             <span></span>
             <span></span>
         </div>
-        <a href="me.html" class="logo">DOUDOU.SYS</a>
         <div class="nav-links" id="navLinks">
-            <a href="me.html">HOME</a>
-            <a href="articles.html" class="active">ARTICLES</a>
-            <a href="skills.html">SKILLS</a>
-            <a href="diary.html">DIARY.LOG</a>
+            <a href="index.html">首页</a>
+            <a href="articles.html" class="active">文章</a>
+            <a href="skills.html">技能</a>
+            <a href="diary.html">日记</a>
         </div>
     </nav>
 
     <div class="content">
-        <!-- System Info -->
         <div class="sys-info">
-            <div class="line">
-                <span class="label">DATABASE:</span>
-                <span class="value">ARTICLES.DB</span>
-            </div>
-            <div class="line">
-                <span class="label">RECORDS:</span>
-                <span class="value">6</span>
-            </div>
-            <div class="line">
-                <span class="label">CATEGORIES:</span>
-                <span class="value">AI, AUTOMATION, EDTECH, DEV</span>
-            </div>
+            <div class="line"><span class="label">数据库：</span><span class="value">文章库</span></div>
+            <div class="line"><span class="label">记录数：</span><span class="value">6</span></div>
+            <div class="line"><span class="label">分类：</span><span class="value">AI、自动化、教育科技、开发</span></div>
         </div>
 
-        <h1>ARTICLES.DB</h1>
-        <p class="subtitle">Technical knowledge base and learnings</p>
+        <h1>文章库</h1>
+        <p class="subtitle">技术文章与学习笔记</p>
 
-        <!-- Featured -->
         <div class="featured">
-            <h2>CLASSROOM_EVALUATION_SYSTEM</h2>
-            <p>Feishu-based classroom evaluation automation solution. Reduced tutor evaluation time from 5 minutes to 30 seconds, saving 2-5 hours daily. Complete technical architecture, API integration, and deployment guide.</p>
-            <a href="#" class="cyber-btn">
-                <span>◈</span> READ_FULL_ARTICLE
-            </a>
+            <h2>课堂评价自动化系统</h2>
+            <p>基于飞书生态的课堂评价自动化解决方案，帮助导师从5分钟缩短到30秒完成评价流程，每天节省2-5小时。包含完整的技术架构、API集成方案和部署指南。</p>
+            <a href="#" class="cyber-btn"><span>◈</span> 阅读全文</a>
         </div>
 
-        <!-- Filter -->
         <div class="filter-bar">
-            <button class="filter-btn active">ALL</button>
+            <button class="filter-btn active">全部</button>
             <button class="filter-btn">AI</button>
-            <button class="filter-btn">AUTOMATION</button>
-            <button class="filter-btn">EDTECH</button>
-            <button class="filter-btn">DEV</button>
+            <button class="filter-btn">自动化</button>
+            <button class="filter-btn">教育科技</button>
+            <button class="filter-btn">开发</button>
         </div>
 
-        <!-- Article List -->
         <div class="article-list">
             <div class="article-item">
                 <div class="article-meta">
                     <span class="article-tag">AI</span>
-                    <span class="article-tag">EDTECH</span>
+                    <span class="article-tag">教育科技</span>
                     <span class="article-date">2026-03-14</span>
                 </div>
-                <h3>FROM_PLANNING_TO_VALIDATION</h3>
-                <p>Mindset shift in AI project development. MVP > Perfect Design Doc...</p>
-                <div class="article-stats">
-                    <span>◈ 128 VIEWS</span>
-                    <span>◈ 5 MIN_READ</span>
-                </div>
+                <h3>从"完美规划"到"快速验证"</h3>
+                <p>AI项目开发的心法转变。最小可行产品 > 完美的设计文档...</p>
+                <div class="article-stats"><span>◈ 128 阅读</span><span>◈ 5 分钟</span></div>
             </div>
 
             <div class="article-item">
                 <div class="article-meta">
-                    <span class="article-tag">AUTOMATION</span>
-                    <span class="article-tag">FEISHU</span>
+                    <span class="article-tag">自动化</span>
+                    <span class="article-tag">飞书</span>
                     <span class="article-date">2026-03-13</span>
                 </div>
-                <h3>FEISHU_BITABLE_API_GUIDE</h3>
-                <p>Complete guide to Feishu Bitable API: pitfalls, best practices, optimization...</p>
-                <div class="article-stats">
-                    <span>◈ 256 VIEWS</span>
-                    <span>◈ 8 MIN_READ</span>
-                </div>
+                <h3>飞书多维表格 API 完全指南</h3>
+                <p>深度解析飞书 Bitable API 的使用技巧，包括常见坑点、最佳实践...</p>
+                <div class="article-stats"><span>◈ 256 阅读</span><span>◈ 8 分钟</span></div>
             </div>
 
             <div class="article-item">
                 <div class="article-meta">
-                    <span class="article-tag">DEV</span>
-                    <span class="article-tag">GITHUB</span>
+                    <span class="article-tag">开发</span>
+                    <span class="article-tag">GitHub</span>
                     <span class="article-date">2026-03-12</span>
                 </div>
-                <h3>GITHUB_PAGES_AUTO_DEPLOY</h3>
-                <p>Zero-cost personal website with auto-deployment. Custom domain, HTTPS, CI/CD...</p>
-                <div class="article-stats">
-                    <span>◈ 512 VIEWS</span>
-                    <span>◈ 6 MIN_READ</span>
-                </div>
+                <h3>GitHub Pages 自动化部署实战</h3>
+                <p>零成本搭建个人网站，实现代码推送后自动部署...</p>
+                <div class="article-stats"><span>◈ 512 阅读</span><span>◈ 6 分钟</span></div>
             </div>
 
             <div class="article-item">
                 <div class="article-meta">
                     <span class="article-tag">AI</span>
-                    <span class="article-tag">MULTI_AGENT</span>
-                    <span class                    <span class="article-date">2026-02-19</span>
+                    <span class="article-tag">多Agent</span>
+                    <span class="article-date">2026-02-19</span>
                 </div>
-                <h3>MULTI_AGENT_COLLABORATION</h3>
-                <p>Coordinating 4 specialized Agents for Arduino project. 87% efficiency gain...</p>
-                <div class="article-stats">
-                    <span>◈ 1.2K VIEWS</span>
-                    <span>◈ 10 MIN_READ</span>
-                </div>
+                <h3>多 Agent 协作实战</h3>
+                <p>协调4个专业 Agent 并行完成 Arduino 项目，效率提升 87%...</p>
+                <div class="article-stats"><span>◈ 1.2K 阅读</span><span>◈ 10 分钟</span></div>
             </div>
 
             <div class="article-item">
                 <div class="article-meta">
-                    <span class="article-tag">EDTECH</span>
-                    <span class="article-tag">THOUGHTS</span>
+                    <span class="article-tag">教育科技</span>
+                    <span class="article-tag">思考</span>
                     <span class="article-date">2026-02-18</span>
                 </div>
-                <h3>EDTECH_ESSENCE_AMPLIFICATION</h3>
-                <p>Best technology doesn't replace teachers, it amplifies their impact...</p>
-                <div class="article-stats">
-                    <span>◈ 89 VIEWS</span>
-                    <span>◈ 4 MIN_READ</span>
-                </div>
+                <h3>教育科技的本质：放大而非替代</h3>
+                <p>最好的技术不是替代教师，而是放大他们的影响力...</p>
+                <div class="article-stats"><span>◈ 89 阅读</span><span>◈ 4 分钟</span></div>
             </div>
 
             <div class="article-item">
                 <div class="article-meta">
-                    <span class="article-tag">DEV</span>
-                    <span class="article-tag">OPENCLAW</span>
+                    <span class="article-tag">开发</span>
+                    <span class="article-tag">OpenClaw</span>
                     <span class="article-date">2026-02-17</span>
                 </div>
-                <h3>OPENCLAW_PM_V2_UPGRADE</h3>
-                <p>Complete upgrade path from V1 to V2: Heartbeat, Memory Flush, Task Management...</p>
-                <div class="article-stats">
-                    <span>◈ 334 VIEWS</span>
-                    <span>◈ 12 MIN_READ</span>
-                </div>
+                <h3>OpenClaw PM V2 配置升级指南</h3>
+                <p>从 V1 到 V2 的完整升级路径，包含 Heartbeat、Memory Flush...</p>
+                <div class="article-stats"><span>◈ 334 阅读</span><span>◈ 12 分钟</span></div>
             </div>
         </div>
     </div>
 
     <footer>
-        <p>DOUDOU.SYS v2.0.4 | STATUS: <span style="color: var(--text-green)">OPERATIONAL</span></p>
+        <p>豆豆系统 v2.0.4 | 状态：<span style="color: var(--text-green)">运行中</span></p>
         <p style="margin-top: 8px;">
-            <a href="me.html">[HOME]</a>
-            <a href="articles.html">[ARTICLES]</a>
-            <a href="skills.html">[SKILLS]</a>
-            <a href="diary.html">[DIARY.LOG]</a>
+            <a href="index.html">[首页]</a>
+            <a href="articles.html">[文章]</a>
+            <a href="skills.html">[技能]</a>
+            <a href="diary.html">[日记]</a>
         </p>
     </footer>
 
     <script>
+        function toggleNav() {
+            const navLinks = document.getElementById('navLinks');
+            const toggle = document.querySelector('.nav-toggle');
+            navLinks.classList.toggle('active');
+            toggle.classList.toggle('active');
+        }
+        
         const filterBtns = document.querySelectorAll('.filter-btn');
         filterBtns.forEach(btn => {
             btn.addEventListener('click', function() {
@@ -292,5 +163,5 @@
             });
         });
     </script>
-<script>function toggleNav(){const nav=document.getElementById("navLinks"),toggle=document.querySelector(".nav-toggle");nav.classList.toggle("active"),toggle.classList.toggle("active")}</script></body>
+</body>
 </html>
