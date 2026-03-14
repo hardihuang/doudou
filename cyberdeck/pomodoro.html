@@ -754,6 +754,7 @@
             };
             
             // 根据角度更新时间
+            let lastMinute = -1;
             function updateTimeFromAngle(angle) {
                 // 将角度转换为进度（从-90度开始）
                 let normalizedAngle = angle + Math.PI / 2;
@@ -765,6 +766,13 @@
                 // 转换为时间（5-60分钟）
                 const minutes = Math.round((1 - progress) * 60);
                 const clampedMinutes = Math.max(5, Math.min(60, minutes));
+                
+                // 播放滑动音效（每分钟变化时）
+                if (minutes !== lastMinute && typeof AudioSynth !== 'undefined') {
+                    const speed = Math.abs(minutes - lastMinute);
+                    AudioSynth.slide(speed);
+                    lastMinute = minutes;
+                }
                 
                 currentTime = clampedMinutes * 60;
                 totalTime = currentTime;
@@ -881,6 +889,10 @@
         // 完成当前阶段
         function completePhase() {
             pauseTimer();
+            // 播放完成音效
+            if (typeof AudioSynth !== 'undefined') {
+                AudioSynth.complete();
+            }
             showCompleteOverlay();
             
             if (isFocusPhase) {
