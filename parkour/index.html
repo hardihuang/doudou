@@ -142,16 +142,16 @@
         </div>
 
         <div class="skill-indicator">
-            二段跳: <span id="jumpCount">2</span>/2
+            五段跳: <span id="jumpCount">5</span>/5
         </div>
 
         <div id="startScreen">
             <h1>森林跑酷</h1>
             <p>在神秘森林中奔跑，躲避尖刺</p>
-            <p>使用二段跳越过障碍</p>
+            <p>使用五段跳越过障碍</p>
             <div class="controls">
                 [空格键] 或 [↑] 跳跃<br>
-                [二段跳] 空中再次跳跃
+                [五段跳] 空中再次跳跃
             </div>
             <div class="btn" onclick="startGame()">开始游戏</div>
         </div>
@@ -171,8 +171,8 @@
         let gameRunning = false;
         let score = 0;
         let distance = 0;
-        let gameSpeed = 3;
-        let jumpCount = 2;
+        let gameSpeed = 2;
+        let jumpCount = 5;
         
         // 玩家
         const player = {
@@ -283,7 +283,7 @@
         
         // 生成障碍物
         function spawnObstacle() {
-            if (Math.random() < 0.02) {
+            if (Math.random() < 0.015) {
                 const type = Math.random() < 0.5 ? 'spike' : 'rock';
                 obstacles.push({
                     x: canvas.width,
@@ -358,8 +358,8 @@
                 player.velocityY = 0;
                 player.grounded = true;
                 player.jumping = false;
-                jumpCount = 2;
-                document.querySelector('.skill-indicator').innerHTML = '二段跳: <span id="jumpCount">2</span>/2';
+                jumpCount = 5;
+                document.querySelector('.skill-indicator').innerHTML = '五段跳: <span id="jumpCount">5</span>/5';
             } else {
                 player.grounded = false;
             }
@@ -371,7 +371,7 @@
                 player.velocityY = -12;
                 player.jumping = true;
                 jumpCount--;
-                document.querySelector('.skill-indicator').innerHTML = `二段跳: <span id="jumpCount">${jumpCount}</span>/2`;
+                document.querySelector('.skill-indicator').innerHTML = `五段跳: <span id="jumpCount">${jumpCount}</span>/2`;
                 
                 // 创建跳跃粒子
                 for (let i = 0; i < 5; i++) {
@@ -431,7 +431,7 @@
             
             // 逐渐增加速度
             if (distance % 100 === 0) {
-                gameSpeed += 0.1;
+                gameSpeed += 0.05;
             }
             
             requestAnimationFrame(gameLoop);
@@ -443,8 +443,8 @@
             gameRunning = true;
             score = 0;
             distance = 0;
-            gameSpeed = 3;
-            jumpCount = 2;
+            gameSpeed = 2;
+            jumpCount = 5;
             obstacles = [];
             particles = [];
             player.y = ground.y - player.height;
