@@ -598,10 +598,11 @@
             }
             
             // 更新粒子
+            // 简化粒子更新 - 香橙派优化
             particles = particles.filter(p => {
                 p.x += p.vx;
                 p.y += p.vy;
-                p.life -= 0.02;
+                p.life -= 0.05; // 加快消失速度
                 return p.life > 0;
             });
             
@@ -644,7 +645,7 @@
                     pipe.passed = true;
                     score++;
                     document.getElementById('scoreDisplay').textContent = score;
-                    playScoreSound();
+                    if (typeof AudioSynth !== 'undefined') AudioSynth.success();
                     createParticles(bird.x, bird.y, '#00ff00');
                     
                     // 更新最高分
@@ -661,12 +662,15 @@
         }
         
         // 绘制粒子
+        // 简化粒子绘制 - 香橙派优化
         function drawParticles() {
+            // 限制最大粒子数
+            if (particles.length > 20) {
+                particles = particles.slice(-20);
+            }
             particles.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 3 * p.life, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${p.color}, ${p.life})`;
-                ctx.fill();
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 2, 2); // 用矩形代替圆弧，性能更好
             });
         }
         
@@ -689,7 +693,7 @@
         function jump() {
             if (gameState !== 'playing') return;
             bird.velocity = JUMP_STRENGTH;
-            playJumpSound();
+            if (typeof AudioSynth !== 'undefined') AudioSynth.click();
             createParticles(bird.x, bird.y + bird.height / 2, '#00ffff');
         }
         
@@ -732,14 +736,16 @@
         }
         
         // 创建粒子效果
+        // 简化粒子效果 - 香橙派优化
         function createParticles(x, y, color) {
-            for (let i = 0; i < 8; i++) {
+            // 减少粒子数量从8到3
+            for (let i = 0; i < 3; i++) {
                 particles.push({
                     x: x,
                     y: y,
-                    vx: (Math.random() - 0.5) * 4,
-                    vy: (Math.random() - 0.5) * 4,
-                    life: 1,
+                    vx: (Math.random() - 0.5) * 2, // 减少速度
+                    vy: (Math.random() - 0.5) * 2,
+                    life: 0.6, // 减少生命周期
                     color: color
                 });
             }
@@ -771,7 +777,7 @@
         // 游戏结束
         function gameOver() {
             gameState = 'gameover';
-            playDieSound();
+            if (typeof AudioSynth !== 'undefined') AudioSynth.fail();
             document.getElementById('finalScore').textContent = score;
             document.getElementById('gameOverScreen').classList.remove('hidden');
         }
