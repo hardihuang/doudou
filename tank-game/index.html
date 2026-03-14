@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Battle Arena</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+        }
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        canvas {
+            display: block;
+            background: #0a0a15;
+            border-radius: 10px;
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: #00ffff;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        #gameOver, #startScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #ff0066;
+        }
+        #startScreen { border-color: #00ffff; display: flex; flex-direction: column; }
+        #gameOver { display: none; }
+        h1 { font-size: 48px; color: #00ffff; text-shadow: 0 0 20px #00ffff; margin-bottom: 20px; }
+        button {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(45deg, #00ffff, #0099ff);
+            color: #000;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(0, 255, 255, 0.8); }
+        .controls { margin-top: 20px; color: #aaa; }
+        .key { display: inline-block; padding: 5px 10px; margin: 2px; background: #333; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
+        <div id="ui">
+            <div>Health: <span id="health">100</span>%</div>
+            <div>Score: <span id="score">0</span></div>
+            <div>Wave: <span id="wave">1</span></div>
+        </div>
+        <div id="startScreen">
+            <h1>TANK BATTLE</h1>
+            <p>Destroy enemy tanks and survive!</p>
+            <button id="startBtn">START GAME</button>
+            <div class="controls">
+                <p><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> or Arrows to Move</p>
+                <p><span class="key">SPACE</span> to Shoot</p>
+            </div>
+        </div>
+        <div id="gameOver">
+            <h1 style="color:#ff0066">GAME OVER</h1>
+            <p>Score: <span id="finalScore">0</span></p>
+            <p>Wave: <span id="finalWave">1</span></p>
+            <button id="restartBtn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameRunning = false, score = 0, wave = 1, keys = {}, lastShot = 0;
+const SHOT_COOLDOWN = 250;
+
+// Game objects
+let player, bullets = [], enemies = [], particles = [], walls = [];
+
+class Tank {
+    constructor(x, y, color, isPlayer = false) {
+        this.x = x; this.y = y;
+        this.width = 40; this.height = 40;
+        this.angle = 0;
+        this.speed = isPlayer ? 4 : 2;
+        this.color = color;
+        this.isPlayer = isPlayer;
+        this.health = 100;
+        this.maxHealth = 100;
+        this.cooldown = 0;
+    }
+    
+    update() {
+        if (this.cooldown > 0) this.cooldown--;
+        
+        if (this.isPlayer) {
+            let dx = 0, dy = 0;
+            if (keys['w'] || keys['arrowup']) dy = -1;
+            if (keys['s'] || keys['arrowdown']) dy = 1;
+            if (keys['a'] || keys['arrowleft']) dx = -1;
+            if (keys['d'] || keys['arrowright']) dx = 1;
+            
+            if (dx !== 0 || dy !== 0) {
+                this.angle = Math.atan2(dy, dx);
+                this.x += dx * this.speed;
+                this.y += dy * this.speed;
+            }
+            
+            // Keep in bounds
+            this.x = Math.max(20, Math.min(canvas.width - 20, this.x));
+            this.y = Math.max(20, Math.min(canvas.height - 20, this.y));
+            
+            // Shoot
+            if (keys[' '] && this.cooldown === 0) {
+                this.shoot();
+                this.cooldown = 15;
+            }
+        } else {
+            // Enemy AI
+            const dx = player.x - this.x;
+            const dy = player.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 100) {
+                this.angle = Math.atan2(dy, dx);
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+            }
+            
+            if (dist < 300 && this.cooldown === 0) {
+                this.shoot();
+                this.cooldown = 30 + Math.random() * 30;
+            }
+        }
+    }
+    
+    shoot() {
+        const bx = this.x + Math.cos(this.angle) * 25;
+        const by = this.y + Math.sin(this.angle) * 25;
+        bullets.push(new Bullet(bx, by, this.angle, this.isPlayer));
+    }
+    
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        
+        // Tank body
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-20, -15, 35, 30);
+        
+        // Tank tracks
+        ctx.fillStyle = '#333';
+        ctx.fillRect(-22, -18, 40, 6);
+        ctx.fillRect(-22, 12, 40, 6);
+        
+        // Cannon
+        ctx.fillStyle = '#555';
+        ctx.fillRect(0, -4, 30, 8);
+        
+        // Turret
+        ctx.beginPath();
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        ctx.restore();
+        
+        // Health bar
+        if (this.health < this.maxHealth) {
+            ctx.fillStyle = '#333';
+            ctx.fillRect(this.x - 20, this.y - 30, 40, 6);
+            ctx.fillStyle = this.health > 50 ? '#0f0' : '#f00';
+            ctx.fillRect(this.x - 20, this.y - 30, 40 * (this.health / this.maxHealth), 6);
+        }
+    }
+}
+
+class Bullet {
+    constructor(x, y, angle, isPlayer) {
+        this.x = x; this.y = y;
+        this.angle = angle;
+        this.speed = 10;
+        this.isPlayer = isPlayer;
+        this.radius = 4;
+    }
+    
+    update() {
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+    }
+    
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.isPlayer ? '#ff0' : '#f00';
+        ctx.fill();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.isPlayer ? '#ff0' : '#f00';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+    
+    isOffScreen() {
+        return this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height;
+    }
+}
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x; this.y = y;
+        this.vx = (Math.random() - 0.5) * 10;
+        this.vy = (Math.random() - 0.5) * 10;
+        this.life = 1;
+        this.color = color;
+        this.size = Math.random() * 5 + 2;
+    }
+    
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx *= 0.95;
+        this.vy *= 0.95;
+        this.life -= 0.02;
+    }
+    
+    draw() {
+        ctx.globalAlpha = this.life;
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        ctx.globalAlpha = 1;
+    }
+}
+
+function createExplosion(x, y, color) {
+    for (let i = 0; i < 20; i++) {
+        particles.push(new Particle(x, y, color));
+    }
+}
+
+function spawnWave() {
+    const enemyCount = 2 + wave;
+    for (let i = 0; i < enemyCount; i++) {
+        let ex, ey;
+        do {
+            ex = Math.random() * canvas.width;
+            ey = Math.random() * canvas.height;
+        } while (Math.abs(ex - player.x) < 200 && Math.abs(ey - player.y) < 200);
+        
+        enemies.push(new Tank(ex, ey, '#ff3366'));
+    }
+}
+
+function checkCollisions() {
+    // Bullet vs enemies/player
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        
+        if (b.isPlayer) {
+            for (let j = enemies.length - 1; j >= 0; j--) {
+                const e = enemies[j];
+                const dist = Math.sqrt((b.x - e.x) ** 2 + (b.y - e.y) ** 2);
+                if (dist < 25) {
+                    e.health -= 25;
+                    createExplosion(b.x, b.y, '#ff0');
+                    bullets.splice(i, 1);
+                    
+                    if (e.health <= 0) {
+                        createExplosion(e.x, e.y, '#ff3366');
+                        enemies.splice(j, 1);
+                        score += 100;
+                    }
+                    break;
+                }
+            }
+        } else {
+            const dist = Math.sqrt((b.x - player.x) ** 2 + (b.y - player.y) ** 2);
+            if (dist < 25) {
+                player.health -= 10;
+                createExplosion(b.x, b.y, '#f00');
+                bullets.splice(i, 1);
+            }
+        }
+    }
+    
+    // Check if wave complete
+    if (enemies.length === 0) {
+        wave++;
+        spawnWave();
+    }
+}
+
+function update() {
+    if (!gameRunning) return;
+    
+    player.update();
+    
+    bullets.forEach((b, i) => {
+        b.update();
+        if (b.isOffScreen()) bullets.splice(i, 1);
+    });
+    
+    enemies.forEach(e => e.update());
+    particles.forEach((p, i) => {
+        p.update();
+        if (p.life <= 0) particles.splice(i, 1);
+    });
+    
+    checkCollisions();
+    
+    // Update UI
+    document.getElementById('health').textContent = Math.max(0, player.health);
+    document.getElementById('score').textContent = score;
+    document.getElementById('wave').textContent = wave;
+    
+    // Game over
+    if (player.health <= 0) {
+        gameOver();
+    }
+}
+
+function draw() {
+    // Clear with trail effect
+    ctx.fillStyle = 'rgba(10, 10, 21, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Grid
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 50) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 50) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+    
+    if (gameRunning) {
+        player.draw();
+        enemies.forEach(e => e.draw());
+        bullets.forEach(b => b.draw());
+        particles.forEach(p => p.draw());
+    }
+}
+
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+    player = new Tank(canvas.width/2, canvas.height/2, '#00ffff', true);
+    bullets = []; enemies = []; particles = []; score = 0; wave = 1;
+    spawnWave();
+    gameRunning = true;
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('gameOver').style.display = 'none';
+}
+
+function gameOver() {
+    gameRunning = false;
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('finalWave').textContent = wave;
+    document.getElementById('gameOver').style.display = 'block';
+}
+
+// Input
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+
+// Start loop
+gameLoop();
+</script>
+</body>
+</html>
