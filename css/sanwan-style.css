@@ -1,0 +1,162 @@
+/* sanwan.ai 风格浅色系主题 */
+:root {
+    --bg-primary: #FAF7F2;
+    --bg-white: #ffffff;
+    --accent: #E67E22;
+    --accent-light: #FEF5E7;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-muted: #888888;
+    --border: #E8E4DE;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* 导航栏 */
+nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: rgba(255,255,255,0.95);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.logo { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.logo span { color: var(--accent); }
+
+.nav-links { display: flex; gap: 32px; }
+.nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.3s;
+    position: relative;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--accent); }
+.nav-links a.active::after {
+    content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+    height: 2px; background: var(--accent); border-radius: 1px;
+}
+
+/* 主内容区 */
+main { max-width: 1200px; margin: 0 auto; padding: 100px 24px 48px; }
+
+/* 页面标题 */
+.page-header { text-align: center; padding: 48px 0; }
+.page-header h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+.page-header h1 span { color: var(--accent); }
+.page-header p { font-size: 16px; color: var(--text-secondary); }
+
+/* 卡片通用样式 */
+.card {
+    background: var(--bg-white);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+/* 按钮 */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: #D35400;
+    transform: translateY(-2px);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+.btn-outline:hover {
+    background: var(--accent-light);
+}
+
+/* 标签 */
+.tag {
+    display: inline-flex;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+}
+
+.tag-accent {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+/* 列表项 */
+.list-item {
+    background: var(--bg-white);
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+}
+
+.list-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+/* 页脚 */
+footer {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+footer a { color: var(--accent); text-decoration: none; }
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .nav-links { display: none; }
+    main { padding: 80px 16px 32px; }
+    .page-header h1 { font-size: 28px; }
+}
