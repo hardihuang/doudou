@@ -21,12 +21,7 @@
                         'ink': '#1a1a1a',
                         'accent': '#ff6b35',
                         'muted': '#6b6b6b',
-                        'ai': '#8b5cf6',
-                        'hardware': '#10b981',
                         'robot': '#f59e0b',
-                        'space': '#3b82f6',
-                        'bio': '#ec4899',
-                        'energy': '#06b6d4',
                     }
                 }
             }
@@ -63,25 +58,6 @@
             transform: rotate(-2deg);
             background: #fff;
         }
-        .masonry-grid {
-            column-count: 3;
-            column-gap: 24px;
-        }
-        @media (max-width: 1024px) {
-            .masonry-grid { column-count: 2; }
-        }
-        @media (max-width: 640px) {
-            .masonry-grid { column-count: 1; }
-        }
-        .card {
-            break-inside: avoid;
-            margin-bottom: 24px;
-            display: block;
-        }
-        /* Navigation - Single row, scrollable on mobile */
-        .nav-wrapper {
-            position: relative;
-        }
         .nav-scroll {
             display: flex;
             gap: 8px;
@@ -112,7 +88,6 @@
             background: #1a1a1a;
             color: #fff;
         }
-        /* Desktop: show all without scroll */
         @media (min-width: 1024px) {
             .nav-scroll {
                 overflow-x: visible;
@@ -152,18 +127,6 @@
             background: #1a1a1a;
             color: #fff;
             padding: 2px 4px;
-        }
-        .external-link {
-            font-family: 'Courier Prime', monospace;
-            font-size: 0.7rem;
-            color: #6b6b6b;
-            text-decoration: none;
-            border-bottom: 1px dotted #6b6b6b;
-            transition: all 0.15s ease;
-        }
-        .external-link:hover {
-            color: #ff6b35;
-            border-bottom-color: #ff6b35;
         }
         .video-link {
             display: inline-flex;
@@ -216,22 +179,18 @@
     <!-- Navigation -->
     <nav class="border-b-2 border-ink sticky top-0 bg-paper z-50">
         <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="nav-wrapper">
-                <div class="nav-scroll">
-                    <button class="nav-pill active">全部</button>
-                    <button class="nav-pill">🤖 AI</button>
-                    <button class="nav-pill">🔧 硬件</button>
-                    <button class="nav-pill">🚀 航天</button>
-                    <button class="nav-pill">🧬 生物</button>
-                    <button class="nav-pill">⚡ 新能源</button>
-                    <button class="nav-pill">🔥 热门</button>
-                </div>
+            <div class="nav-scroll">
+                <button class="nav-pill active">全部</button>
+                <button class="nav-pill">🤖 机器人</button>
+                <button class="nav-pill">🔧 硬件</button>
+                <button class="nav-pill">🚀 航天</button>
+                <button class="nav-pill">⚡ 新能源</button>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-6 py-8">
+    <main class="max-w-3xl mx-auto px-6 py-8">
         <!-- Daily Summary -->
         <section class="mb-10">
             <div class="hand-drawn bg-white p-6">
@@ -240,196 +199,46 @@
                     <span>今天有什么好玩的？</span>
                 </h2>
                 <p class="text-muted leading-relaxed">
-                    今天带你看看：AI 怎么帮程序员写代码、10美元就能买到的开源电脑、太空里的3D打印机，还有会走路的机器人代码免费开放啦！这些技术说不定你也能动手试试～
+                    今天带你看看机器狗的"跑酷"进化！科学家给机器狗装上了"AI大脑"，让它在虚拟世界里摔了成千上万次，终于学会了像跑酷运动员一样在复杂地形中跳跃穿梭！
                 </p>
             </div>
         </section>
 
-        <!-- News Grid -->
-        <div class="masonry-grid">
-            <!-- News 1: AI -->
-            <article class="card">
-                <div class="hand-drawn bg-white p-5 h-full">
-                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="category-pill text-robot">🤖 机器人</span>
-                            <span class="font-mono text-xs text-muted">2026-03-16</span>
-                        </div>
-                    </div>
-                    <a href="article-robot-parkour.html" class="block">
-                        <h2 class="font-display font-bold text-xl mb-3 leading-tight hover:text-accent transition-colors">
-                            机器狗的"跑酷"进化，AI如何重塑机械运动极限？
-                        </h2>
-                    </a>
-                    <p class="text-muted text-sm leading-relaxed mb-4">
-                        传统的机器狗在平地走得很稳，但遇到废墟、楼梯就容易摔倒。现在科学家给机器狗装上了"AI大脑"，让它在虚拟世界里摔了成千上万次，终于学会了像跑酷运动员一样在复杂地形中跳跃穿梭！
-                    </p>
-                    <div class="thinking-box">
-                        <div class="thinking-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 16v-4M12 8h.01"/>
-                            </svg>
-                            动手想一想
-                        </div>
-                        <p class="thinking-question">
-                            如果你设计的救援机器人要去帮助地震灾区的人，你最希望它拥有什么超能力？
-                        </p>
-                    </div>
-                    <div class="links-row">
-                        <a href="article-robot-parkour.html" class="read-link">阅读全文 →</a>
-                        <a href="https://b23.tv/JolnBCW" target="_blank" class="video-link">▶ 机器狗行走的秘密</a>
-                    </div>
+        <!-- News Card -->
+        <article class="hand-drawn bg-white p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="category-pill text-robot">🤖 机器人</span>
+                <span class="font-mono text-sm text-muted">2026-03-16</span>
+            </div>
+            
+            <a href="article-robot-parkour.html" class="block mb-4">
+                <h2 class="font-display font-bold text-2xl leading-tight hover:text-accent transition-colors">
+                    机器狗的"跑酷"进化，AI如何重塑机械运动极限？
+                </h2>
+            </a>
+            
+            <p class="text-muted leading-relaxed mb-6">
+                传统的机器狗在平地走得很稳，但遇到废墟、楼梯就容易摔倒。现在科学家给机器狗装上了"AI大脑"，让它在虚拟世界里摔了成千上万次，终于学会了像跑酷运动员一样在复杂地形中跳跃穿梭！
+            </p>
+            
+            <div class="thinking-box">
+                <div class="thinking-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                    动手想一想
                 </div>
-            </article>
-
-            <!-- News 2: Hardware -->
-            <article class="card">
-                <div class="hand-drawn bg-white p-5 h-full">
-                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="category-pill text-hardware">🔧 硬件</span>
-                            <span class="font-mono text-xs text-muted">2026-03-16</span>
-                        </div>
-                    </div>
-                    <h2 class="font-display font-bold text-xl mb-3 leading-tight hover:text-accent transition-colors cursor-pointer">
-                        70块钱买电脑？还能自己改！
-                    </h2>
-                    <p class="text-muted text-sm leading-relaxed mb-4">
-                        有一种新电脑只要10美元（大概70块人民币），性能跟树莓派差不多，但最酷的是——它的设计图完全公开！就像乐高说明书一样，你可以自己改、自己造，甚至卖给别人。这就是"开源硬件"的魅力！
-                    </p>
-                    <div class="thinking-box">
-                        <div class="thinking-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 16v-4M12 8h.01"/>
-                            </svg>
-                            动手想一想
-                        </div>
-                        <p class="thinking-question">
-                            如果你有一台70块的迷你电脑，你想用它做什么好玩的东西？
-                        </p>
-                    </div>
-                    <div class="links-row">
-                        <a href="https://hackaday.com" target="_blank" class="external-link">原文：Hackaday →</a>
-                        <a href="#" class="video-link">▶ 开箱视频</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- News 3: Space -->
-            <article class="card">
-                <div class="hand-drawn bg-white p-5 h-full">
-                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="category-pill text-space">🚀 航天</span>
-                            <span class="font-mono text-xs text-muted">2026-03-16</span>
-                        </div>
-                    </div>
-                    <h2 class="font-display font-bold text-xl mb-3 leading-tight hover:text-accent transition-colors cursor-pointer">
-                        太空里也能3D打印了！宇航员现场造零件
-                    </h2>
-                    <p class="text-muted text-sm leading-relaxed mb-4">
-                        国际空间站上装了一台金属3D打印机，宇航员成功打印出了第一个零件——一个钛合金支架！这意味着以后去火星不用带所有零件，缺什么就打印什么。就像科幻电影里的场景成真了！
-                    </p>
-                    <div class="thinking-box">
-                        <div class="thinking-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 16v-4M12 8h.01"/>
-                            </svg>
-                            动手想一想
-                        </div>
-                        <p class="thinking-question">
-                            如果你去火星只能带3样东西，你会带什么？为什么？
-                        </p>
-                    </div>
-                    <div class="links-row">
-                        <a href="https://spacenews.com" target="_blank" class="external-link">原文：SpaceNews →</a>
-                        <a href="#" class="video-link">▶ NASA视频</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- News 4: Energy -->
-            <article class="card">
-                <div class="hand-drawn bg-white p-5 h-full">
-                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="category-pill text-energy">⚡ 新能源</span>
-                            <span class="font-mono text-xs text-muted">2026-03-16</span>
-                        </div>
-                    </div>
-                    <h2 class="font-display font-bold text-xl mb-3 leading-tight hover:text-accent transition-colors cursor-pointer">
-                        太阳能电池新突破：晒晒太阳就能省电费
-                    </h2>
-                    <p class="text-muted text-sm leading-relaxed mb-4">
-                        中国科学家发明了一种新的太阳能电池，能把28%的阳光变成电，而且能用很久！这意味着以后家里的电费可能会便宜很多，甚至不用交电费。想象一下，你的玩具车、平板电脑都能用太阳充电！
-                    </p>
-                    <div class="thinking-box">
-                        <div class="thinking-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 16v-4M12 8h.01"/>
-                            </svg>
-                            动手想一想
-                        </div>
-                        <p class="thinking-question">
-                            如果你能用太阳给一样东西充电，你最想给什么充电？为什么？
-                        </p>
-                    </div>
-                    <div class="links-row">
-                        <a href="https://www.nature.com" target="_blank" class="external-link">原文：Nature →</a>
-                        <a href="#" class="video-link">▶ 科普动画</a>
-                    </div>
-                </div>
-            </article>
-
-            <!-- News 5: Robot -->
-            <article class="card">
-                <div class="hand-drawn bg-white p-5 h-full">
-                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                        <div class="flex items-center gap-2">
-                            <span class="category-pill text-robot">🤖 机器人</span>
-                            <span class="font-mono text-xs text-muted">2026-03-16</span>
-                        </div>
-                    </div>
-                    <h2 class="font-display font-bold text-xl mb-3 leading-tight hover:text-accent transition-pointer">
-                        机器狗的秘密代码免费开放！你也能造一个
-                    </h2>
-                    <p class="text-muted text-sm leading-relaxed mb-4">
-                        波士顿动力（就是那个造机器狗的公司）把机器狗的"大脑"代码公开了！包括怎么走路、怎么保持平衡这些核心技术。现在任何人都能学习，说不定你也能造出自己的小机器人！
-                    </p>
-                    <div class="thinking-box">
-                        <div class="thinking-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 16v-4M12 8h.01"/>
-                            </svg>
-                            动手想一想
-                        </div>
-                        <p class="thinking-question">
-                            如果你要设计一个机器人帮自己做一件事，你希望它帮你做什么？
-                        </p>
-                    </div>
-                    <div class="links-row">
-                        <a href="https://spectrum.ieee.org" target="_blank" class="external-link">原文：IEEE Spectrum →</a>
-                        <a href="#" class="video-link">▶ 机器狗演示</a>
-                    </div>
-                </div>
-            </article>
-        </div>
-
-        <!-- Pagination -->
-        <div class="mt-12 flex items-center justify-center gap-4">
-            <button class="hand-drawn bg-white px-4 py-2 font-mono text-sm disabled:opacity-50" disabled>
-                ← 上一页
-            </button>
-            <span class="font-mono text-sm text-muted">第 1 页，共 1 页</span>
-            <button class="hand-drawn bg-white px-4 py-2 font-mono text-sm disabled:opacity-50" disabled>
-                下一页 →
-            </button>
-        </div>
+                <p class="thinking-question">
+                    如果你设计的救援机器人要去帮助地震灾区的人，你最希望它拥有什么超能力？
+                </p>
+            </div>
+            
+            <div class="links-row">
+                <a href="article-robot-parkour.html" class="read-link">阅读全文 →</a>
+                <a href="https://b23.tv/JolnBCW" target="_blank" class="video-link">▶ 机器狗行走的秘密</a>
+            </div>
+        </article>
     </main>
 
     <!-- Footer -->
@@ -449,7 +258,6 @@
     </footer>
 
     <script>
-        // Navigation interaction
         document.querySelectorAll('.nav-pill').forEach(pill => {
             pill.addEventListener('click', function() {
                 document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
