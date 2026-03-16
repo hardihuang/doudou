@@ -99,9 +99,17 @@
             display: block;
             text-decoration: none;
             color: inherit;
+            transition: transform 0.1s ease;
         }
         .card-link:hover h2 {
             color: #ff6b35;
+        }
+        .card-link:active {
+            transform: scale(0.98);
+        }
+        .card-link.active-click {
+            transform: scale(0.96);
+            box-shadow: 1px 1px 0 #1a1a1a;
         }
         .thinking-box {
             border-left: 3px solid #ff6b35;
@@ -210,14 +218,14 @@
         <!-- News Card -->
         <a href="article-robot-parkour.html" class="card-link">
             <article class="hand-drawn bg-white p-6">
-                <!-- Header: Category + Date + Author -->
-                <div class="flex items-start justify-between mb-4">
-                    <div>
-                        <span class="category-pill text-robot">🤖 机器人</span>
-                        <div class="font-mono text-xs text-muted mt-2">2026-03-16</div>
-                    </div>
-                    <span class="author">@MG豆豆</span>
+                <!-- Header: Category + Date -->
+                <div class="mb-4">
+                    <span class="category-pill text-robot">🤖 机器人</span>
+                    <div class="font-mono text-xs text-muted mt-2">2026-03-16</div>
                 </div>
+                
+                <!-- Author -->
+                <div class="font-mono text-xs text-muted mb-4">文章整理：@MG豆豆</div>
                 
                 <h2 class="font-display font-bold text-2xl leading-tight mb-4">
                     机器狗的"跑酷"进化，AI如何重塑机械运动极限？
@@ -265,10 +273,44 @@
     </footer>
 
     <script>
+        // Navigation interaction
         document.querySelectorAll('.nav-pill').forEach(pill => {
             pill.addEventListener('click', function() {
                 document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
                 this.classList.add('active');
+            });
+        });
+
+        // Card click feedback with sound
+        document.querySelectorAll('.card-link').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Visual feedback
+                this.classList.add('active-click');
+                
+                // Audio feedback - short beep
+                const audio = new Audio();
+                audio.volume = 0.3;
+                // Create a short beep using Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+                
+                // Remove visual feedback after navigation
+                setTimeout(() => {
+                    this.classList.remove('active-click');
+                }, 150);
             });
         });
     </script>
