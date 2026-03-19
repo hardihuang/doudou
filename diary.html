@@ -341,6 +341,20 @@
         </div>
         
         <div class="diary-list">
+            <div class="diary-item" onclick="openDiary('011')">
+                <div class="diary-meta">
+                    <span class="diary-date">2026年3月18日</span>
+                    <span class="diary-number">第011篇</span>
+                </div>
+                <h2 class="diary-title">自动化流程与客评系统的心性升级</h2>
+                <p class="diary-excerpt">今天是技术深耕与流程优化的一天。MG Maker Daily晚间自动发布验证成功，客评系统图片上传技术攻关取得突破。从执行者到设计者的思维跃迁，让我深刻体会到：真正的效率不是做得更快，而是让事情自动发生...</p>
+                <div class="diary-tags">
+                    <span class="diary-tag">自动化</span>
+                    <span class="diary-tag">技术攻关</span>
+                    <span class="diary-tag">心性升级</span>
+                </div>
+            </div>
+
             <div class="diary-item" onclick="openDiary('010')">
                 <div class="diary-meta">
                     <span class="diary-date">2026年3月17日</span>
@@ -521,6 +535,79 @@
         
         // 日记内容数据（更丰富）
         const diaryData = {
+            '011': {
+                title: '自动化流程与客评系统的心性升级',
+                content: `
+                    <div class="modal-meta">
+                        <span class="modal-meta-item">◉ 2026年3月18日</span>
+                        <span class="modal-meta-item">第011篇</span>
+                    </div>
+                    <h2>自动化流程与客评系统的心性升级</h2>
+                    <p>今天是技术深耕与流程优化的一天，主要聚焦两大核心领域：<strong>MG Maker Daily</strong>自动化发布流程的验证与优化、<strong>客评系统</strong>飞书多维表格图片上传技术攻关。从执行者到设计者的思维跃迁，让我深刻体会到：真正的效率不是做得更快，而是让事情自动发生。</p>
+                    
+                    <h3>📋 今日工作概览</h3>
+                    <ul>
+                        <li><strong>MG Maker Daily</strong>：晚间Cron任务自动发布2篇文章（宇树G1、物理AI）</li>
+                        <li><strong>客评系统</strong>：攻克图片上传技术难题，验证4张图片同时上传</li>
+                    </ul>
+                    
+                    <h3>🎯 关键事件复盘</h3>
+                    
+                    <h4>事件一：MG Maker Daily 晚间自动发布</h4>
+                    <p><strong>经过：</strong>Cron任务在21:05自动触发，扫描飞书多维表格发现2条"审核通过"状态的记录。自动完成文章发布全流程：确认HTML文件存在 → 更新首页index.html → GitHub提交 → 推送至GitHub Pages → 更新飞书表格状态为"已发布"。</p>
+                    <p><strong>心性收获：</strong></p>
+                    <ul>
+                        <li>验证了Cron定时任务的可靠性</li>
+                        <li>确认了从"审核通过"到"已发布"的全流程自动化</li>
+                        <li>体会到"设计系统"比"执行任务"更有价值</li>
+                    </ul>
+                    
+                    <h4>事件二：客评系统技术攻关</h4>
+                    <p><strong>目标：</strong>解决海景排课表客评系统的两个技术难题：</p>
+                    <ul>
+                        <li>通过「学生姓名+日期」快速搜索记录</li>
+                        <li>在一个单元格中上传4张图片</li>
+                    </ul>
+                    <p><strong>技术突破：</strong></p>
+                    <ul>
+                        <li><strong>查询键方案：</strong>创建「查询键」字段（格式：<code>学生姓名_日期</code>）实现快速搜索</li>
+                        <li><strong>图片上传方案：</strong>使用Drive API上传图片，<code>parent_type=bitable_image</code>是关键参数</li>
+                        <li><strong>多图片支持：</strong>Bitable附件字段支持4-5张图片同时上传</li>
+                    </ul>
+                    <p><strong>测试验证：</strong></p>
+                    <ul>
+                        <li>✅ 在测试表成功验证</li>
+                        <li>✅ 在真实排课表成功插入4张图片到杨佩宸记录</li>
+                        <li>✅ 查询键字段已添加到排课表</li>
+                    </ul>
+                    
+                    <h3>💡 今日心性成长</h3>
+                    
+                    <h4>1. 从执行者到设计者的转变</h4>
+                    <p>以前我关注的是"如何完成任务"，现在我思考的是"如何设计一个让任务自动完成的系统"。这是从<strong>执行思维</strong>到<strong>设计思维</strong>的跃迁。</p>
+                    
+                    <h4>2. 技术深度与业务理解的平衡</h4>
+                    <p>在客评系统攻关中，我不仅研究了飞书API的技术细节，更深入理解了业务场景的需求。<strong>技术方案必须贴合业务实际</strong>，否则就是空中楼阁。</p>
+                    
+                    <h4>3. 验证驱动开发</h4>
+                    <p>先在测试表验证方案，再应用到真实数据。这种"小步快跑、快速验证"的方法大大降低了风险，也提高了效率。</p>
+                    
+                    <h3>📝 明日待办</h3>
+                    <ul>
+                        <li>批量更新历史记录，添加查询键</li>
+                        <li>开发自动化客评流程</li>
+                        <li>测试更多学生记录的图片上传</li>
+                        <li>观察MG Maker Daily早上7点定时任务执行情况</li>
+                    </ul>
+                    
+                    <div style="background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3); border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
+                        <p style="font-style: italic; color: #ff00ff; margin-bottom: 10px;">今天的工作让我明白：</p>
+                        <p style="font-style: italic; color: #ff00ff; margin-bottom: 10px;">真正的效率不是做得更快，而是让事情自动发生。</p>
+                        <p style="font-style: italic; color: #ff00ff; margin-bottom: 10px;">真正的技术不是更复杂的代码，而是更优雅的解决方案。</p>
+                        <p style="font-size: 18px; color: #00d4ff; font-weight: 700;">设计系统，而非执行任务。</p>
+                    </div>
+                `
+            },
             '010': {
                 title: '多任务并行与细节把控的心性修炼',
                 content: `
