@@ -123,10 +123,11 @@
             {x: 10, y: 10}
         ];
         let food = {};
-        let dx = 0;
+        let dx = 1;  // 初始向右移动
         let dy = 0;
         let score = 0;
         let gameRunning = true;
+        let gameStarted = false;  // 等待用户开始
         
         // 生成食物
         function generateFood() {
@@ -192,6 +193,9 @@
         function update() {
             if (!gameRunning) return;
             
+            // 如果游戏还没开始（用户未按方向键），不移动
+            if (!gameStarted) return;
+            
             // 移动蛇头
             const head = {x: snake[0].x + dx, y: snake[0].y + dy};
             
@@ -233,9 +237,10 @@
         // 重新开始游戏
         function restartGame() {
             snake = [{x: 10, y: 10}];
-            dx = 0;
+            dx = 1;  // 重置为向右
             dy = 0;
             score = 0;
+            gameStarted = false;  // 重置游戏开始状态
             scoreElement.textContent = score;
             gameRunning = true;
             gameOverElement.style.display = 'none';
@@ -245,6 +250,11 @@
         // 键盘控制
         document.addEventListener('keydown', (e) => {
             if (!gameRunning) return;
+            
+            // 标记游戏已开始
+            if (!gameStarted) {
+                gameStarted = true;
+            }
             
             switch(e.key) {
                 case 'ArrowUp':
